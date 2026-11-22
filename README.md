@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 <img src="build/appicon.png" width="108" alt="ZentraDeck Icon" />
 
@@ -12,6 +12,19 @@
 [![Platforms](https://img.shields.io/badge/Windows_%7C_macOS_%7C_Linux-6366F1?style=for-the-badge)](https://github.com/CyberRhythm/ZentraDeck/releases)
 
 [Why ZentraDeck](#why-zentradeck) • [How It Compares](#how-it-compares) • [Features](#features-in-detail) • [Security & Transparency](#security--transparency) • [Downloads](#downloads) • [Build from Source](#build-from-source)
+
+</div>
+
+---
+
+<div align="center">
+
+<img src="docs/screenshots/overview.png" width="820" alt="ZentraDeck Server Overview" />
+
+<p align="center">
+  <img src="docs/screenshots/fleet.png" width="49%" alt="ZentraDeck Fleet Overview" />
+  <img src="docs/screenshots/terminal.png" width="49%" alt="ZentraDeck Live Streaming Terminal" />
+</p>
 
 </div>
 
