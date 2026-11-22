@@ -119,7 +119,7 @@ Both **Installer** and **Portable** packages are built automatically via GitHub 
 
 | OS | Architectures | Installer | Portable |
 | :--- | :--- | :--- | :--- |
-| **Windows** | `64-bit (amd64)`, `32-bit (x86)`, `ARM64` | `.exe` Setup (NSIS) | `.zip` Portable |
+| **Windows** | `64-bit (amd64)`, `ARM64` | `.exe` Setup (NSIS) | `.zip` Portable |
 | **macOS** | `Universal` (Intel + Apple Silicon M1–M4) | `.dmg` Disk Image | `.zip` App Bundle |
 | **Linux** | `amd64`, `arm64` | `.deb` (Ubuntu/Debian) | `.tar.gz` Binary |
 
