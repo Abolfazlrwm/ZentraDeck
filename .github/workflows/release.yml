@@ -1,0 +1,189 @@
+name: Build & Release ZentraDeck
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Windows (${{ matrix.arch }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, '386', arm64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Wails CLI & NSIS
+        shell: pwsh
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+          $goBin = Join-Path (go env GOPATH) "bin"
+          Add-Content -Path $env:GITHUB_PATH -Value $goBin
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            choco install nsis -y --no-progress
+          }
+          if (Test-Path "C:\Program Files (x86)\NSIS") {
+            Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files (x86)\NSIS"
+          }
+
+      - name: Build Portable & Installer
+        shell: pwsh
+        run: |
+          wails build -clean -platform "windows/${{ matrix.arch }}" -nsis
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+
+          $exe = Get-ChildItem -Path build\bin\*.exe | Where-Object { $_.Name -notlike '*installer*' } | Select-Object -First 1
+          if (-not $exe) { throw "Portable executable not found!" }
+          Compress-Archive -Path $exe.FullName -DestinationPath "dist\ZentraDeck-windows-${{ matrix.arch }}-portable.zip" -Force
+
+          $inst = Get-ChildItem -Path build\bin\*installer*.exe | Select-Object -First 1
+          if ($inst) {
+            Copy-Item -Path $inst.FullName -Destination "dist\ZentraDeck-windows-${{ matrix.arch }}-installer.exe" -Force
+          }
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.arch }}
+          path: dist/*
+
+  build-macos:
+    name: macOS (Universal)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Wails CLI
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Build Portable (.zip) & Installer (.dmg)
+        run: |
+          wails build -clean -platform darwin/universal
+          mkdir -p dist dmg_stage
+
+          APP_BUNDLE=$(find build/bin -maxdepth 1 -name "*.app" | head -n 1)
+          ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" dist/ZentraDeck-macos-universal-portable.zip
+
+          cp -R "$APP_BUNDLE" dmg_stage/
+          ln -s /Applications dmg_stage/Applications
+          hdiutil create -volname "ZentraDeck" -srcfolder dmg_stage -ov -format UDZO dist/ZentraDeck-macos-universal-installer.dmg
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal
+          path: dist/*
+
+  build-linux:
+    name: Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install System Dependencies & Wails CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
+          go install github.com/wailsapp/wails/v2/cmd/wails@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Build Portable (.tar.gz) & Installer (.deb)
+        run: |
+          wails build -clean -tags webkit2_41
+          mkdir -p dist
+
+          BIN_PATH=$(find build/bin -maxdepth 1 -type f -executable | head -n 1)
+          BIN_NAME=$(basename "$BIN_PATH")
+          tar -czf "dist/ZentraDeck-linux-${{ matrix.arch }}-portable.tar.gz" -C build/bin "$BIN_NAME"
+
+          VER="${GITHUB_REF_NAME#v}"
+          if ! [[ "$VER" =~ ^[0-9] ]]; then VER="0.1.0"; fi
+
+          PKG="pkg_deb"
+          mkdir -p "$PKG/DEBIAN" "$PKG/usr/local/bin" "$PKG/usr/share/applications" "$PKG/usr/share/icons/hicolor/512x512/apps"
+          cp "$BIN_PATH" "$PKG/usr/local/bin/zentradeck"
+          chmod 755 "$PKG/usr/local/bin/zentradeck"
+          cp build/appicon.png "$PKG/usr/share/icons/hicolor/512x512/apps/zentradeck.png"
+
+          printf "Package: zentradeck\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: %s\nDepends: libgtk-3-0, libwebkit2gtk-4.1-0\nMaintainer: Amir Hamrang <https://github.com/CyberRhythm>\nDescription: Lightweight, agentless Linux server command center over SSH.\n" "$VER" "${{ matrix.arch }}" > "$PKG/DEBIAN/control"
+          printf "[Desktop Entry]\nName=ZentraDeck\nComment=Lightweight Linux Server Command Center\nExec=/usr/local/bin/zentradeck\nIcon=zentradeck\nTerminal=false\nType=Application\nCategories=System;Network;Monitor;\n" > "$PKG/usr/share/applications/zentradeck.desktop"
+
+          dpkg-deb --build "$PKG" "dist/ZentraDeck-linux-${{ matrix.arch }}-installer.deb"
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: dist/*
+
+  release:
+    name: Publish GitHub Release
+    needs: [build-windows, build-macos, build-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
