@@ -59,7 +59,7 @@ Every tool has trade-offs. ZentraDeck is built for **fast, zero-agent live triag
 | **Per-Server SOCKS5 Proxy** | ✅ Built-in (free) | ⚠️ Paid / plugin | ❌ | ❌ |
 | **Simple & Pro UI Modes (Free)** | ✅ Free toggle | ❌ Paid tiers (Termius) | ❌ Complex setup | ⚠️ Fixed UI |
 | **One-Click Privacy Mode** | ✅ Masks IPs & users | ❌ | ❌ | ❌ |
-| **11 Languages (incl. Persian RTL) + `?` Help** | ✅ On every section | ❌ Mostly English | ❌ | ⚠️ Partial |
+| **11 Languages (incl. Persian RTL) + Help Tooltips** | ✅ On every section | ❌ Mostly English | ❌ | ⚠️ Partial |
 | **Built-In Live Demo Sandbox** | ✅ Try immediately | ❌ | ❌ | ❌ |
 
 ---
@@ -107,9 +107,22 @@ Instead of guessing what's eating resources, ZentraDeck pulls **both top CPU and
 ### 8. Open Ports & Firewall Inspector
 Inspect every active listening **TCP/UDP** port (`ss -tulnp`) along with its bound address and owning process, plus live **UFW / firewalld** status detection — essential for auditing exposed services on cloud VPS boxes.
 
-### 9. Built for Global Teams — 11 Languages (with Persian RTL) & Contextual `?` Tooltips
-Switch instantly between **English, فارسی (Persian with full RTL layout & offline-bundled Vazirmatn font), 中文 (Chinese), Português, Español, Deutsch, Français, 日本語 (Japanese), Русский (Russian), 한국어 (Korean), and Bahasa Indonesia**.
-Every single section — from *Load Avg* and *Swap* to *Firewall* and *SOCKS5* — includes a subtle **`?` hover tooltip** explaining what that metric actually means in the user's chosen language.
+### 9. Built for Global Teams — 11 Languages & Contextual Help Tooltips
+Switch languages instantly from the top bar — including full **Persian (`فارسی`) RTL** layout with an offline-bundled **Vazirmatn** font (zero external CDN requests). Every metric and section — from *Load Avg* and *Swap* to *Firewall* and *SOCKS5* — includes an inline hover help tooltip explaining what it means in your selected language.
+
+| Language | Native Name | Code | Layout |
+| :--- | :--- | :---: | :---: |
+| **English** | English | `en` | LTR |
+| **Persian** | فارسی *(offline Vazirmatn)* | `fa` | **RTL** |
+| **Chinese (Simplified)** | 简体中文 | `zh` | LTR |
+| **Portuguese** | Português | `pt` | LTR |
+| **Spanish** | Español | `es` | LTR |
+| **German** | Deutsch | `de` | LTR |
+| **French** | Français | `fr` | LTR |
+| **Japanese** | 日本語 | `ja` | LTR |
+| **Russian** | Русский | `ru` | LTR |
+| **Korean** | 한국어 | `ko` | LTR |
+| **Indonesian** | Bahasa Indonesia | `id` | LTR |
 
 ### 10. Interactive Live Demo Sandbox
 Not ready to connect a production server yet? Launch **Live Demo Sandbox** right from the sidebar to explore 3 simulated Linux nodes (`Web`, `Database`, `Edge Gateway`), test Docker/Systemd actions, stream terminal commands, and even click **Simulate Outage** to watch alerting in action.
