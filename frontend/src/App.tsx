@@ -250,7 +250,7 @@ function HelpTip({ text }: { text: string }) {
               width: 252,
               zIndex: 9999,
             }}
-            className="pointer-events-none rounded-xl border border-cyan-400/25 bg-slate-950/95 px-3 py-2 text-left text-[11px] font-normal normal-case tracking-normal leading-relaxed text-slate-200 shadow-2xl backdrop-blur-xl"
+            className="pointer-events-none rounded-xl border border-cyan-400/25 bg-slate-950/95 px-3 py-2 text-start text-[11px] font-normal normal-case tracking-normal leading-relaxed text-slate-200 shadow-2xl backdrop-blur-xl"
           >
             {text}
           </div>,
@@ -327,6 +327,12 @@ export default function App() {
   const t = translations[lang];
   const h = HELP_TOOLTIPS[lang] || HELP_TOOLTIPS.en;
   const isPro = settings.viewMode === 'pro';
+  const isRtl = lang === 'fa';
+
+  useEffect(() => {
+    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+  }, [isRtl, lang]);
 
   const activeServers = demoMode ? demoServers : servers;
   const selectedServer = useMemo(
@@ -905,7 +911,7 @@ export default function App() {
       </div>
 
       {/* SIDEBAR */}
-      <aside className="relative z-20 flex w-72 shrink-0 flex-col border-r border-white/10 bg-slate-950/75 backdrop-blur-xl">
+      <aside className="relative z-20 flex w-72 shrink-0 flex-col border-e border-white/10 bg-slate-950/75 backdrop-blur-xl">
         {/* Brand */}
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div className="flex items-center gap-3">
@@ -915,7 +921,7 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base font-bold tracking-tight text-white">ZentraDeck</span>
-                <button type="button" onClick={() => BrowserOpenURL('https://github.com/CyberRhythm/ZentraDeck/releases')} title="View releases on GitHub" className="cursor-pointer transition hover:border-cyan-400/50 hover:text-cyan-300 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300">v0.1.0</button>
+                <button type="button" onClick={() => BrowserOpenURL('https://github.com/CyberRhythm/ZentraDeck/releases')} title="View releases on GitHub" className="cursor-pointer transition hover:border-cyan-400/50 hover:text-cyan-300 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300">v0.2.0</button>
               </div>
               <p className="text-[11px] text-slate-400">{t.openSourceFree}</p>
             </div>
@@ -1079,7 +1085,7 @@ export default function App() {
           >
             <FileDown className="h-4 w-4 text-cyan-400" />
             <span className="truncate">{t.importSSH}</span>
-            <span className="ml-auto"><HelpTip text={h.importSSH} /></span>
+            <span className="ms-auto"><HelpTip text={h.importSSH} /></span>
           </button>
 
           <button
@@ -1231,7 +1237,7 @@ export default function App() {
               </button>
 
               {alertsOpen && (
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-white/15 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-xl">
+                <div className="absolute end-0 mt-2 w-72 rounded-2xl border border-white/15 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-xl">
                   <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-2">
                     <span className="text-xs font-semibold text-white">{t.alerts}</span>
                     {alerts.length > 0 && (
@@ -1285,7 +1291,7 @@ export default function App() {
               </button>
 
               {langMenuOpen && (
-                <div className="absolute right-0 mt-2 w-44 rounded-2xl border border-white/15 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-xl">
+                <div className="absolute end-0 mt-2 w-44 rounded-2xl border border-white/15 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-xl">
                   {LANGUAGES.map((item) => (
                     <button
                       key={item.code}
@@ -1293,7 +1299,7 @@ export default function App() {
                         updateSettings({ language: item.code });
                         setLangMenuOpen(false);
                       }}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-1.5 text-left text-xs transition ${
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-1.5 text-start text-xs transition ${
                         lang === item.code
                           ? 'bg-indigo-500/25 font-semibold text-white'
                           : 'text-slate-300 hover:bg-white/5 hover:text-white'
@@ -1951,7 +1957,7 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center gap-1.5 text-[11px]">
-                      <span className="mr-1 text-slate-400">{t.sortBy}:</span>
+                      <span className="me-1 text-slate-400">{t.sortBy}:</span>
                       {(
                         [
                           { key: 'cpu', label: 'CPU %' },
@@ -1991,53 +1997,53 @@ export default function App() {
                     <p className="py-10 text-center text-xs text-slate-400">{t.noProcesses}</p>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
+                      <table className="w-full text-start text-xs">
                         <thead>
                           <tr className="border-b border-white/10 text-[11px] uppercase text-slate-400">
                             <th
                               onClick={() => toggleProcSort('pid')}
-                              className="cursor-pointer pb-2.5 pr-3 hover:text-white"
+                              className="cursor-pointer pb-2.5 pe-3 hover:text-white"
                             >
                               {t.pid}
                             </th>
                             <th
                               onClick={() => toggleProcSort('command')}
-                              className="cursor-pointer pb-2.5 pr-3 hover:text-white"
+                              className="cursor-pointer pb-2.5 pe-3 hover:text-white"
                             >
                               {t.command}
                             </th>
-                            <th className="pb-2.5 pr-3">{t.user}</th>
+                            <th className="pb-2.5 pe-3">{t.user}</th>
                             <th
                               onClick={() => toggleProcSort('cpu')}
-                              className="cursor-pointer pb-2.5 pr-3 hover:text-cyan-300"
+                              className="cursor-pointer pb-2.5 pe-3 hover:text-cyan-300"
                             >
                               CPU %
                             </th>
                             <th
                               onClick={() => toggleProcSort('mem')}
-                              className="cursor-pointer pb-2.5 pr-3 hover:text-indigo-300"
+                              className="cursor-pointer pb-2.5 pe-3 hover:text-indigo-300"
                             >
                               RAM %
                             </th>
-                            {isPro && <th className="pb-2.5 text-right">Action</th>}
+                            {isPro && <th className="pb-2.5 text-end">Action</th>}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
                           {sortedProcesses.map((proc) => (
                             <tr key={proc.pid} className="hover:bg-white/[0.02]">
-                              <td className="py-2.5 pr-3 font-mono text-slate-400">{proc.pid}</td>
-                              <td className="py-2.5 pr-3 font-mono font-semibold text-white">
+                              <td className="py-2.5 pe-3 font-mono text-slate-400">{proc.pid}</td>
+                              <td className="py-2.5 pe-3 font-mono font-semibold text-white">
                                 {proc.command}
                               </td>
-                              <td className="py-2.5 pr-3 text-slate-300">{proc.user}</td>
-                              <td className="py-2.5 pr-3 font-mono font-semibold text-cyan-300">
+                              <td className="py-2.5 pe-3 text-slate-300">{proc.user}</td>
+                              <td className="py-2.5 pe-3 font-mono font-semibold text-cyan-300">
                                 {proc.cpu.toFixed(1)}%
                               </td>
-                              <td className="py-2.5 pr-3 font-mono font-semibold text-indigo-300">
+                              <td className="py-2.5 pe-3 font-mono font-semibold text-indigo-300">
                                 {proc.mem.toFixed(1)}%
                               </td>
                               {isPro && (
-                                <td className="py-2.5 text-right">
+                                <td className="py-2.5 text-end">
                                   <div className="inline-flex items-center gap-1.5">
                                     <button
                                       disabled={busyAction !== null}
@@ -2115,7 +2121,7 @@ export default function App() {
                                   {c.id.slice(0, 12)}
                                 </span>
                               </div>
-                              <div className="mt-1 flex flex-wrap items-center gap-3 pl-4 text-[11px] text-slate-400">
+                              <div className="mt-1 flex flex-wrap items-center gap-3 ps-4 text-[11px] text-slate-400">
                                 <span>
                                   {t.containerImage}:{' '}
                                   <strong className="font-mono text-cyan-200">{c.image}</strong>
@@ -2190,13 +2196,13 @@ export default function App() {
 
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="relative">
-                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                        <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                         <input
                           type="text"
                           value={serviceSearch}
                           onChange={(e) => setServiceSearch(e.target.value)}
                           placeholder={t.searchServices}
-                          className="w-44 rounded-xl border border-white/10 bg-slate-950/70 py-1.5 pl-8 pr-3 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-400/50"
+                          className="w-44 rounded-xl border border-white/10 bg-slate-950/70 py-1.5 ps-8 pe-3 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-400/50"
                         />
                       </div>
 
@@ -2257,7 +2263,7 @@ export default function App() {
                                 </span>
                               </div>
                               {svc.description && (
-                                <p className="mt-0.5 truncate pl-4 text-[11px] text-slate-400">
+                                <p className="mt-0.5 truncate ps-4 text-[11px] text-slate-400">
                                   {svc.description}
                                 </p>
                               )}
@@ -2351,27 +2357,27 @@ export default function App() {
                       <p className="py-8 text-center text-xs text-slate-400">{t.noOpenPorts}</p>
                     ) : (
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full text-start text-xs">
                           <thead>
                             <tr className="border-b border-white/10 text-[11px] uppercase text-slate-400">
-                              <th className="pb-2.5 pr-4">{t.protocol}</th>
-                              <th className="pb-2.5 pr-4">{t.port}</th>
-                              <th className="pb-2.5 pr-4">{t.address}</th>
+                              <th className="pb-2.5 pe-4">{t.protocol}</th>
+                              <th className="pb-2.5 pe-4">{t.port}</th>
+                              <th className="pb-2.5 pe-4">{t.address}</th>
                               <th className="pb-2.5">{t.processName}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-white/5">
                             {openPorts.map((item, idx) => (
                               <tr key={`${item.proto}-${item.address}-${item.port}-${idx}`}>
-                                <td className="py-2 pr-4">
+                                <td className="py-2 pe-4">
                                   <span className="rounded bg-indigo-500/20 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-indigo-300">
                                     {item.proto}
                                   </span>
                                 </td>
-                                <td className="py-2 pr-4 font-mono font-bold text-cyan-300">
+                                <td className="py-2 pe-4 font-mono font-bold text-cyan-300">
                                   {item.port}
                                 </td>
-                                <td className="py-2 pr-4 font-mono text-slate-300">
+                                <td className="py-2 pe-4 font-mono text-slate-300">
                                   {settings.privacyMode && item.address !== '127.0.0.1' && item.address !== '0.0.0.0'
                                     ? MASK_IP
                                     : item.address}
@@ -3020,7 +3026,7 @@ export default function App() {
                 />
               </div>
 
-              <div className="min-w-0 flex-1 text-center sm:text-left">
+              <div className="min-w-0 flex-1 text-center sm:text-start">
                 <span
                   className={`inline-block rounded-lg bg-gradient-to-r px-2.5 py-0.5 text-[11px] font-bold text-slate-950 ${selectedWallet.accent}`}
                 >

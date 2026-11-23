@@ -23,7 +23,9 @@ mrand "math/rand/v2"
 "time"
 
 wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
-"golang.org/x/crypto/ssh"
+"github.com/zalando/go-keyring"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/knownhosts"
 "golang.org/x/net/proxy"
 )
 
@@ -417,19 +419,107 @@ return "", err
 return dir, nil
 }
 
+const (
+vaultKeyringService = "ZentraDeck"
+vaultKeyringAccount = "vault-master-key"
+)
+
+var knownHostsMu sync.Mutex
+
 func getOrCreateVaultKey(dir string) ([]byte, error) {
+// 1. Prefer OS Keychain (Windows Credential Manager / macOS Keychain / Linux Secret Service)
+if secret, err := keyring.Get(vaultKeyringService, vaultKeyringAccount); err == nil {
+if decoded, err := hex.DecodeString(strings.TrimSpace(secret)); err == nil && len(decoded) == 32 {
+return decoded, nil
+}
+}
+
+// 2. Migrate legacy .vault.key into OS Keychain if present
 keyPath := filepath.Join(dir, ".vault.key")
 if data, err := os.ReadFile(keyPath); err == nil && len(data) == 32 {
+if err := keyring.Set(vaultKeyringService, vaultKeyringAccount, hex.EncodeToString(data)); err == nil {
+_ = os.Remove(keyPath)
+}
 return data, nil
 }
+
+// 3. Generate a fresh 256-bit key and store in OS Keychain (fallback to 0600 file if keyring unavailable)
 key := make([]byte, 32)
 if _, err := io.ReadFull(crand.Reader, key); err != nil {
 return nil, err
+}
+if err := keyring.Set(vaultKeyringService, vaultKeyringAccount, hex.EncodeToString(key)); err == nil {
+return key, nil
 }
 if err := os.WriteFile(keyPath, key, 0600); err != nil {
 return nil, err
 }
 return key, nil
+}
+
+func verifyOrTrustHostKey(hostname string, remote net.Addr, key ssh.PublicKey) error {
+knownHostsMu.Lock()
+defer knownHostsMu.Unlock()
+
+dir, err := getVaultDir()
+if err != nil {
+return fmt.Errorf("cannot locate known_hosts directory: %w", err)
+}
+appKnownHosts := filepath.Join(dir, "known_hosts")
+if _, err := os.Stat(appKnownHosts); os.IsNotExist(err) {
+if err := os.WriteFile(appKnownHosts, []byte{}, 0600); err != nil {
+return fmt.Errorf("cannot initialize known_hosts: %w", err)
+}
+}
+
+files := []string{appKnownHosts}
+if home, err := os.UserHomeDir(); err == nil && home != "" {
+userKH := filepath.Join(home, ".ssh", "known_hosts")
+if info, err := os.Stat(userKH); err == nil && !info.IsDir() {
+if _, parseErr := knownhosts.New(userKH); parseErr == nil {
+files = append(files, userKH)
+}
+}
+}
+
+cb, err := knownhosts.New(files...)
+if err != nil {
+return fmt.Errorf("failed to parse known_hosts: %w", err)
+}
+
+err = cb(hostname, remote, key)
+if err == nil {
+return nil
+}
+
+var keyErr *knownhosts.KeyError
+if errors.As(err, &keyErr) {
+if len(keyErr.Want) > 0 {
+conflictFile := appKnownHosts
+if keyErr.Want[0].Filename != "" {
+conflictFile = keyErr.Want[0].Filename
+}
+fp := ssh.FingerprintSHA256(key)
+return fmt.Errorf(
+"SSH host key mismatch for %s (possible MITM attack or rebuilt server). Received %s (%s). If you intentionally reinstalled this server, remove its old entry from %s",
+knownhosts.Normalize(hostname), key.Type(), fp, conflictFile,
+)
+}
+
+// TOFU (Trust On First Use): record host key for future verification
+line := knownhosts.Line([]string{knownhosts.Normalize(hostname)}, key)
+f, openErr := os.OpenFile(appKnownHosts, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+if openErr != nil {
+return fmt.Errorf("cannot save host key to known_hosts: %w", openErr)
+}
+defer f.Close()
+if _, writeErr := f.WriteString(line + "\n"); writeErr != nil {
+return fmt.Errorf("cannot write host key to known_hosts: %w", writeErr)
+}
+return nil
+}
+
+return err
 }
 
 func encryptData(plaintext, key []byte) ([]byte, error) {
@@ -781,7 +871,7 @@ auths = append(auths, ssh.Password(cfg.Password))
 return &ssh.ClientConfig{
 User:            cfg.Username,
 Auth:            auths,
-HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+HostKeyCallback: verifyOrTrustHostKey,
 Timeout:         10 * time.Second,
 }, nil
 }

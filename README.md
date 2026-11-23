@@ -1,10 +1,10 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="build/appicon.png" width="108" alt="ZentraDeck Icon" />
 
 # ZentraDeck
 
-**Monitor and control all your Linux servers over plain SSH — ~15 MB RAM, zero server agents, no paywalls.**
+**Monitor and control all your Linux servers over plain SSH — lightweight Go + native WebView desktop app, zero server agents, no paywalls.**
 
 [![Latest Release](https://img.shields.io/github/v/release/CyberRhythm/ZentraDeck?style=for-the-badge&color=06B6D4&label=Download)](https://github.com/CyberRhythm/ZentraDeck/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-34D399?style=for-the-badge)](LICENSE)
@@ -32,12 +32,14 @@
 
 ## Why ZentraDeck?
 
-Managing a handful of Linux VPS boxes shouldn't force you to pick between two bad options:
+Managing a handful of Linux VPS boxes shouldn't force you to pick between two extremes:
 
-1. **Installing heavy monitoring agents** on tiny 512 MB / 1 GB cloud servers, opening extra firewall ports, and maintaining yet another Docker stack just to see why CPU spiked.
-2. **Running bloated 400 MB Electron SSH apps** that lock basic features behind a monthly subscription.
+1. **Installing background monitoring agents** on small 512 MB / 1 GB cloud servers, opening extra firewall ports, and maintaining another Docker stack just to check why CPU spiked.
+2. **Running heavy Electron SSH wrappers** that bundle an entire Chromium runtime and lock everyday features behind a monthly subscription.
 
 **ZentraDeck** is a native desktop app written in **Go + Wails + React** that talks to your servers strictly over standard SSH. Point it at any Ubuntu, Debian, AlmaLinux, Rocky, CentOS, or AWS EC2 instance — you get live telemetry, Docker/Systemd controls, a sortable Task Manager, open-port inspection, and a live streaming terminal in seconds.
+
+> **Honest footprint note:** The ZentraDeck Go backend process uses **~15 MB RAM**. Because Wails renders the UI using your operating system's native WebView (WebView2 on Windows, WebKit on macOS/Linux), OS-managed WebView renderer processes appear alongside it in Task Manager — still without bundling a separate Chromium engine per app.
 
 No agent to install. No cloud account. No telemetry. **100% free and MIT-licensed.**
 
@@ -45,16 +47,19 @@ No agent to install. No cloud account. No telemetry. **100% free and MIT-license
 
 ## How It Compares
 
-| Capability | **ZentraDeck** | Electron SSH Clients | Agent Dashboards (Netdata/Grafana) | Web Panels (Cockpit) |
+Every tool has trade-offs. ZentraDeck is built for **fast, zero-agent live triage and everyday SSH operations** — not as a replacement for multi-month time-series databases or full interactive SFTP suites.
+
+| Capability | **ZentraDeck** | Electron SSH Clients *(Termius, Tabby)* | Agent Dashboards *(Netdata, Grafana)* | Web Panels *(Cockpit)* |
 | :--- | :---: | :---: | :---: | :---: |
-| **Zero Server Agent / No Extra Ports** | ✅ Pure SSH | ✅ | ❌ Agent required | ❌ Daemon + Web Port |
-| **Desktop RAM Usage** | **~15 MB** | 250–600 MB | Browser + Server RAM | Browser + Server RAM |
-| **Write-Only Encrypted Local Vault** | ✅ Never exposed to UI | ❌ Often readable in Edit | N/A | N/A |
-| **Per-Server SOCKS5 Proxy** | ✅ Built-in | ⚠️ Paid / Limited | ❌ | ❌ |
-| **Simple & Pro UI Modes (Free)** | ✅ Free toggle | ❌ "Pro" = Paywall | ❌ Complex setup | ⚠️ Fixed UI |
-| **Live Streaming Terminal + Presets** | ✅ With Stop button | ✅ Terminal only | ❌ | ✅ |
+| **Zero Server Agent / No Extra Ports** | ✅ Pure SSH | ✅ Pure SSH | ❌ Agent required | ❌ Daemon + Web Port |
+| **Desktop Footprint** | **~15 MB Go core** + OS WebView | ~250–600 MB (bundled Chromium) | Browser + Server RAM | Browser + Server RAM |
+| **Long-Term Historical Metrics & Alerting** | ❌ Live session only | ❌ | ✅ Weeks/months TSDB | ⚠️ Basic / PCP plugin |
+| **Full Interactive PTY / SFTP / Team Sync** | ⚠️ Streaming cmd runner | ✅ Rich PTY, SFTP & sync | ❌ | ✅ Web terminal |
+| **OS Keychain + Write-Only Local Vault** | ✅ Never exposed to UI | ⚠️ Often readable / cloud-synced | N/A | N/A |
+| **Per-Server SOCKS5 Proxy** | ✅ Built-in (free) | ⚠️ Paid / plugin | ❌ | ❌ |
+| **Simple & Pro UI Modes (Free)** | ✅ Free toggle | ❌ Paid tiers (Termius) | ❌ Complex setup | ⚠️ Fixed UI |
 | **One-Click Privacy Mode** | ✅ Masks IPs & users | ❌ | ❌ | ❌ |
-| **10 Languages + Contextual `?` Help** | ✅ On every section | ❌ Mostly English | ❌ | ⚠️ Partial |
+| **11 Languages (incl. Persian RTL) + `?` Help** | ✅ On every section | ❌ Mostly English | ❌ | ⚠️ Partial |
 | **Built-In Live Demo Sandbox** | ✅ Try immediately | ❌ | ❌ | ❌ |
 
 ---
@@ -69,10 +74,11 @@ Connect via **Password** or **SSH Private Key** (pick a `.pem`/`.key` file with 
 - **One-Click `~/.ssh/config` Importer:** Already have hosts configured in `~/.ssh/config`? Import them automatically — and if the default file doesn't exist, ZentraDeck opens a file picker so you can select any custom SSH config.
 - **Built for High-Latency Connections:** Uses race-safe persistent SSH sessions with sequential polling (requests never pile up on slow links) and **2-strike outage debouncing** so a single high-ping spike won't spam false offline alerts.
 
-### 2. Write-Only Local Vault (`AES-256-GCM`) & Privacy Mode
-Most desktop tools let anyone standing near your screen click *Edit Server* and read your saved password or private key. ZentraDeck does it differently:
-- **AES-256-GCM Local Encryption:** Credentials are encrypted locally on your machine with a 256-bit key (`0600` permissions) — nothing ever leaves your device.
+### 2. OS Keychain Vault (`AES-256-GCM`), SSH Host Key Verification & Privacy Mode
+Most desktop tools let anyone standing near your screen click *Edit Server* and read your saved password or private key. ZentraDeck takes local security seriously:
+- **OS Keychain + AES-256-GCM Encryption:** Server credentials are encrypted locally with `AES-256-GCM`, and the 256-bit master key is stored in your **OS Keychain** (Windows Credential Manager, macOS Keychain, or Linux Secret Service — with automatic migration from legacy key files and a `0600` file fallback only on minimal Linux setups without a keyring daemon).
 - **Strict Write-Only Secrets:** Once saved, passwords, SSH private keys, and proxy passwords are **never sent back to the frontend UI**. When editing a server, fields stay blank with a *Saved securely* badge — even opening DevTools cannot reveal stored secrets.
+- **SSH Host Key Verification (`known_hosts` + TOFU):** Verifies every server against `~/.ssh/known_hosts` and ZentraDeck's own `known_hosts` store. New hosts are pinned on first connection (Trust On First Use); any subsequent key mismatch blocks the connection immediately with the received SHA-256 fingerprint to guard against MITM attacks.
 - **One-Click Privacy Mode:** Taking a screenshot for GitHub, Discord, or a client? Toggle the eye icon in the header to instantly mask all IP addresses and usernames across the entire app.
 
 ### 3. Simple Mode & Pro Mode — Not a Paywall, Just Clarity
@@ -101,8 +107,8 @@ Instead of guessing what's eating resources, ZentraDeck pulls **both top CPU and
 ### 8. Open Ports & Firewall Inspector
 Inspect every active listening **TCP/UDP** port (`ss -tulnp`) along with its bound address and owning process, plus live **UFW / firewalld** status detection — essential for auditing exposed services on cloud VPS boxes.
 
-### 9. Built for Global Teams — 10 Languages & Contextual `?` Tooltips
-Switch instantly between **English, 中文 (Chinese), Português, Español, Deutsch, Français, 日本語 (Japanese), Русский (Russian), 한국어 (Korean), and Bahasa Indonesia**.  
+### 9. Built for Global Teams — 11 Languages (with Persian RTL) & Contextual `?` Tooltips
+Switch instantly between **English, فارسی (Persian with full RTL layout & offline-bundled Vazirmatn font), 中文 (Chinese), Português, Español, Deutsch, Français, 日本語 (Japanese), Русский (Russian), 한국어 (Korean), and Bahasa Indonesia**.
 Every single section — from *Load Avg* and *Swap* to *Firewall* and *SOCKS5* — includes a subtle **`?` hover tooltip** explaining what that metric actually means in the user's chosen language.
 
 ### 10. Interactive Live Demo Sandbox
@@ -114,8 +120,12 @@ Not ready to connect a production server yet? Launch **Live Demo Sandbox** right
 
 ### Zero Data Collection Guarantee
 - **No telemetry, no analytics, no tracking, and no crash reporters.**
-- **No cloud sync or third-party servers** ? your server list, credentials, and settings stay 100% on your own machine.
-- **Zero outbound connections** except to the SSH servers (and optional SOCKS5 proxies) you explicitly configure.
+- **No cloud sync or third-party servers** — your server list, credentials, and settings stay 100% on your own machine.
+- **Zero outbound connections** except to the SSH servers (and optional SOCKS5 proxies) you explicitly configure. Even bundled fonts (`Vazirmatn`) are loaded locally with zero CDN requests.
+
+### Vault & SSH Security Model
+- **Encrypted Storage:** Server inventory is encrypted at rest (`servers.enc`) using `AES-256-GCM` with a random 256-bit key stored in your OS Keychain (`Windows Credential Manager` / `macOS Keychain` / `Linux Secret Service`).
+- **Host Key Verification:** Uses `golang.org/x/crypto/ssh/knownhosts` across `~/.ssh/known_hosts` and ZentraDeck's `known_hosts` with TOFU pinning and strict mismatch rejection.
 
 Every metric poll runs a single read-only shell block over your encrypted SSH session using standard Linux utilities:
 - System & CPU: `hostname`, `/etc/os-release`, `uname -r`, `/proc/uptime`, `/proc/stat`, `nproc`, `/proc/loadavg`
@@ -128,7 +138,7 @@ Active actions (`systemctl`, `docker`, `kill`, `reboot`, terminal commands) only
 
 ## Downloads
 
-Both **Installer** and **Portable** packages are built automatically via GitHub Actions on every release:
+Both **Installer** and **Portable** packages are built automatically via GitHub Actions on every release with `SHA-256` checksums:
 
 | OS | Architectures | Installer | Portable |
 | :--- | :--- | :--- | :--- |
@@ -137,6 +147,16 @@ Both **Installer** and **Portable** packages are built automatically via GitHub 
 | **Linux** | `amd64`, `arm64` | `.deb` (Ubuntu/Debian) | `.tar.gz` Binary |
 
 👉 **[Download the latest release here](https://github.com/CyberRhythm/ZentraDeck/releases)**
+
+### Note on Unsigned Binaries (Windows SmartScreen & macOS Gatekeeper)
+ZentraDeck is an independent, free open-source project and binaries are currently **not code-signed** with a paid EV/Apple Developer certificate. Because of this, your OS may display a warning on first launch:
+
+- **Windows (SmartScreen):** Click **More info** → **Run anyway**.
+- **macOS (Gatekeeper):** Either open **System Settings → Privacy & Security → Open Anyway**, or clear the quarantine flag after moving the app to `/Applications`:
+```bash
+  xattr -cr /Applications/ZentraDeck.app
+```
+- **Prefer to verify or compile yourself?** Every release includes `checksums.txt` built publicly in GitHub Actions, and you can build from source in minutes below.
 
 ---
 
