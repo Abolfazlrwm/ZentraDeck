@@ -18,6 +18,10 @@ export function DeleteServer(arg1) {
   return window['go']['main']['App']['DeleteServer'](arg1);
 }
 
+export function EvaluateServerAlerts(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['EvaluateServerAlerts'](arg1, arg2, arg3, arg4);
+}
+
 export function GetDemoServers() {
   return window['go']['main']['App']['GetDemoServers']();
 }
@@ -50,6 +54,10 @@ export function KillProcess(arg1, arg2, arg3) {
   return window['go']['main']['App']['KillProcess'](arg1, arg2, arg3);
 }
 
+export function QuitApp() {
+  return window['go']['main']['App']['QuitApp']();
+}
+
 export function RebootServer(arg1) {
   return window['go']['main']['App']['RebootServer'](arg1);
 }
@@ -70,6 +78,10 @@ export function SelectKeyFile() {
   return window['go']['main']['App']['SelectKeyFile']();
 }
 
+export function SendTestNotification() {
+  return window['go']['main']['App']['SendTestNotification']();
+}
+
 export function StartQuickCommand(arg1, arg2, arg3) {
   return window['go']['main']['App']['StartQuickCommand'](arg1, arg2, arg3);
 }
@@ -80,4 +92,8 @@ export function TestConnection(arg1) {
 
 export function ToggleDemoOutage(arg1) {
   return window['go']['main']['App']['ToggleDemoOutage'](arg1);
+}
+
+export function UpdateTraySummary(arg1, arg2) {
+  return window['go']['main']['App']['UpdateTraySummary'](arg1, arg2);
 }

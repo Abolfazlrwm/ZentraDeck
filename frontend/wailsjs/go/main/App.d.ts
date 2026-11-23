@@ -10,6 +10,8 @@ export function ControlService(arg1:string,arg2:string,arg3:string):Promise<main
 
 export function DeleteServer(arg1:string):Promise<void>;
 
+export function EvaluateServerAlerts(arg1:string,arg2:string,arg3:boolean,arg4:main.ServerMetrics):Promise<Array<main.TriggeredAlert>>;
+
 export function GetDemoServers():Promise<Array<main.ServerConfig>>;
 
 export function GetDockerLogs(arg1:string,arg2:string):Promise<string>;
@@ -26,6 +28,8 @@ export function ImportSSHConfig():Promise<number>;
 
 export function KillProcess(arg1:string,arg2:number,arg3:boolean):Promise<main.ActionResult>;
 
+export function QuitApp():Promise<void>;
+
 export function RebootServer(arg1:string):Promise<main.ActionResult>;
 
 export function RunQuickCommand(arg1:string,arg2:string):Promise<main.CommandOutput>;
@@ -36,8 +40,12 @@ export function SaveSettings(arg1:main.AppSettings):Promise<main.AppSettings>;
 
 export function SelectKeyFile():Promise<string>;
 
+export function SendTestNotification():Promise<main.ActionResult>;
+
 export function StartQuickCommand(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
 export function TestConnection(arg1:main.ServerConfig):Promise<main.ActionResult>;
 
 export function ToggleDemoOutage(arg1:string):Promise<boolean>;
+
+export function UpdateTraySummary(arg1:number,arg2:number):Promise<void>;

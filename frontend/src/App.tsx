@@ -4,6 +4,8 @@ import {
   Activity,
   AlertTriangle,
   Bell,
+  BellOff,
+  ChevronDown,
   Box,
   Check,
   CheckCircle2,
@@ -76,6 +78,10 @@ import {
   CancelQuickCommand,
   StartQuickCommand,
   SaveServer,
+  EvaluateServerAlerts,
+  SendTestNotification,
+  UpdateTraySummary,
+  QuitApp,
   SaveSettings,
   SelectKeyFile,
   TestConnection,
@@ -84,6 +90,7 @@ import {
 import { main } from '../wailsjs/go/models';
 import { BrowserOpenURL, EventsOn } from '../wailsjs/runtime/runtime';
 import { LANGUAGES, LanguageCode, translations } from './i18n';
+import { getAlertStrings } from './alertI18n';
 import { HELP_TOOLTIPS } from './helpTooltips';
 import { DONATION_WALLETS } from './wallets';
 
@@ -98,7 +105,8 @@ interface HistoryPoint {
 interface AlertEvent {
   id: string;
   serverName: string;
-  type: 'outage' | 'recovered';
+  type: 'outage' | 'recovered' | 'cpu' | 'ram' | 'disk' | 'service';
+  detail?: string;
   time: string;
   read: boolean;
 }
@@ -212,6 +220,16 @@ const emptyServerForm = (): main.ServerConfig =>
     hasPassword: false,
     hasPrivateKey: false,
     hasProxyPass: false,
+    alertRules: {
+      configured: true,
+      muted: false,
+      onOutage: true,
+      onFailedSvc: true,
+      cpuThreshold: 90,
+      ramThreshold: 90,
+      diskThreshold: 85,
+      cooldownMin: 10,
+    },
   });
 
 function HelpTip({ text }: { text: string }) {
@@ -286,6 +304,27 @@ export default function App() {
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [serverModalOpen, setServerModalOpen] = useState(false);
+
+  useEffect(() => {
+    const off = EventsOn('zentradeck:alert', (al: any) => {
+      if (!al || !al.id) return;
+      setAlerts((prev) => [
+        {
+          id: al.id,
+          serverName: al.serverName,
+          type: al.type,
+          detail: al.detail,
+          time: al.time || new Date().toLocaleTimeString(),
+          read: false,
+        },
+        ...prev.slice(0, 39),
+      ]);
+    });
+    return () => {
+      if (typeof off === 'function') off();
+    };
+  }, []);
+  const [alertRulesOpen, setAlertRulesOpen] = useState(false);
   const [serverForm, setServerForm] = useState<main.ServerConfig>(emptyServerForm);
   const [testingConn, setTestingConn] = useState(false);
   const [testResult, setTestResult] = useState<main.ActionResult | null>(null);
@@ -454,6 +493,7 @@ export default function App() {
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const pollAll = async () => {
+      let onlineCount = 0;
       await Promise.all(
         activeServers.map(async (srv) => {
           try {
@@ -463,19 +503,8 @@ export default function App() {
             const prevOnline = prevOnlineRef.current[srv.id];
 
             if (m.online) {
+              onlineCount += 1;
               failCountRef.current[srv.id] = 0;
-              if (prevOnline === false) {
-                setAlerts((prev) => [
-                  {
-                    id: `${Date.now()}-${srv.id}`,
-                    serverName: srv.name,
-                    type: 'recovered',
-                    time: m.timestamp || new Date().toLocaleTimeString(),
-                    read: false,
-                  },
-                  ...prev.slice(0, 29),
-                ]);
-              }
               prevOnlineRef.current[srv.id] = true;
               setMetricsMap((prev) => ({ ...prev, [srv.id]: m }));
               setHistoryMap((prev) => {
@@ -496,28 +525,39 @@ export default function App() {
               const fails = (failCountRef.current[srv.id] || 0) + 1;
               failCountRef.current[srv.id] = fails;
               if (!srv.isDemo && prevOnline === true && fails < 2) {
+                onlineCount += 1;
                 return;
-              }
-              if (prevOnline === true) {
-                setAlerts((prev) => [
-                  {
-                    id: `${Date.now()}-${srv.id}`,
-                    serverName: srv.name,
-                    type: 'outage',
-                    time: m.timestamp || new Date().toLocaleTimeString(),
-                    read: false,
-                  },
-                  ...prev.slice(0, 29),
-                ]);
               }
               prevOnlineRef.current[srv.id] = false;
               setMetricsMap((prev) => ({ ...prev, [srv.id]: m }));
+            }
+
+            try {
+              const triggered = await EvaluateServerAlerts(srv.id, srv.name, !!srv.isDemo, m);
+              if (!cancelled && triggered && triggered.length > 0) {
+                setAlerts((prev) => [
+                  ...triggered.map((al) => ({
+                    id: al.id,
+                    serverName: al.serverName,
+                    type: al.type as 'outage' | 'recovered' | 'cpu' | 'ram' | 'disk' | 'service',
+                    detail: al.detail,
+                    time: al.time || m.timestamp || new Date().toLocaleTimeString(),
+                    read: false,
+                  })),
+                  ...prev.slice(0, 39),
+                ]);
+              }
+            } catch {
+              // ignore alert eval errors
             }
           } catch (err) {
             console.error(err);
           }
         })
       );
+      if (!cancelled) {
+        UpdateTraySummary(onlineCount, activeServers.length).catch(() => {});
+      }
 
       if (!cancelled) {
         const intervalMs = Math.max(2, settings.pollIntervalSec || 2) * 1000;
@@ -553,6 +593,7 @@ export default function App() {
   const handleOpenAddServer = () => {
     setServerForm(emptyServerForm());
     setTestResult(null);
+    setAlertRulesOpen(false);
     setServerModalOpen(true);
   };
 
@@ -560,6 +601,7 @@ export default function App() {
     e.stopPropagation();
     setServerForm(main.ServerConfig.createFrom(srv));
     setTestResult(null);
+    setAlertRulesOpen(false);
     setServerModalOpen(true);
   };
 
@@ -1236,19 +1278,78 @@ export default function App() {
                 )}
               </button>
 
-              {alertsOpen && (
-                <div className="absolute end-0 mt-2 w-72 rounded-2xl border border-white/15 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-xl">
+              {alertsOpen && (() => {
+                const ta = getAlertStrings(settings.language);
+                return (
+                <div className="absolute end-0 mt-2 w-80 rounded-2xl border border-white/15 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-xl">
                   <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-2">
                     <span className="text-xs font-semibold text-white">{t.alerts}</span>
-                    {alerts.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      {alerts.length > 0 && (
+                        <button
+                          onClick={() => setAlerts([])}
+                          className="text-[11px] text-slate-400 hover:text-white"
+                        >
+                          {t.clearAlerts}
+                        </button>
+                      )}
                       <button
-                        onClick={() => setAlerts([])}
-                        className="text-[11px] text-slate-400 hover:text-white"
+                        onClick={() => QuitApp()}
+                        className="rounded-md border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 text-[10px] text-rose-300 transition hover:bg-rose-500/20"
                       >
-                        {t.clearAlerts}
+                        {ta.quitApp}
                       </button>
-                    )}
+                    </div>
                   </div>
+
+                  {/* Global Desktop Alerts & System Tray Controls */}
+                  <div className="mb-2.5 space-y-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-[11px]">
+                    <label className="flex cursor-pointer items-center justify-between gap-2 text-slate-200">
+                      <span>{ta.desktopAlerts}</span>
+                      <input
+                        type="checkbox"
+                        checked={settings.desktopAlerts !== false}
+                        onChange={async (e) => {
+                          const next = main.AppSettings.createFrom({
+                            ...settings,
+                            desktopAlerts: e.target.checked,
+                            alertPrefsInit: true,
+                          });
+                          setSettings(next);
+                          await SaveSettings(next);
+                        }}
+                        className="h-3.5 w-3.5 accent-cyan-400"
+                      />
+                    </label>
+                    <label className="flex cursor-pointer items-center justify-between gap-2 text-slate-200">
+                      <span>{ta.minimizeToTray}</span>
+                      <input
+                        type="checkbox"
+                        checked={settings.minimizeToTray !== false}
+                        onChange={async (e) => {
+                          const next = main.AppSettings.createFrom({
+                            ...settings,
+                            minimizeToTray: e.target.checked,
+                            alertPrefsInit: true,
+                          });
+                          setSettings(next);
+                          await SaveSettings(next);
+                        }}
+                        className="h-3.5 w-3.5 accent-cyan-400"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const res = await SendTestNotification();
+                        if (!res.success) pushToast('error', res.message);
+                      }}
+                      className="mt-1 w-full rounded-lg border border-cyan-400/25 bg-cyan-500/10 py-1 text-[11px] font-medium text-cyan-200 transition hover:bg-cyan-500/20"
+                    >
+                      {ta.testNotif}
+                    </button>
+                  </div>
+
                   <div className="max-h-60 space-y-1.5 overflow-y-auto">
                     {alerts.length === 0 ? (
                       <p className="py-4 text-center text-xs text-slate-400">{t.noAlerts}</p>
@@ -1258,15 +1359,22 @@ export default function App() {
                           key={a.id}
                           className="flex items-start gap-2 rounded-xl border border-white/5 bg-white/[0.03] p-2 text-xs"
                         >
-                          {a.type === 'outage' ? (
+                          {a.type === 'recovered' ? (
+                            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                          ) : a.type === 'outage' ? (
                             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-400" />
                           ) : (
-                            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-semibold text-white">{a.serverName}</p>
                             <p className="text-[11px] text-slate-400">
-                              {a.type === 'outage' ? t.outageDetected : t.serverRecovered} {DOT} {a.time}
+                              {a.type === 'outage'
+                                ? t.outageDetected
+                                : a.type === 'recovered'
+                                  ? t.serverRecovered
+                                  : a.detail || a.type}{' '}
+                              {DOT} {a.time}
                             </p>
                           </div>
                         </div>
@@ -1274,7 +1382,8 @@ export default function App() {
                     )}
                   </div>
                 </div>
-              )}
+                );
+              })()}
             </div>
 
             {/* Language Selector */}
@@ -2887,6 +2996,154 @@ export default function App() {
                   </div>
                 )}
               </div>
+
+              {/* Per-Server Custom Alert Rules (Collapsible) */}
+              {(() => {
+                const ta = getAlertStrings(settings.language);
+                const rules = serverForm.alertRules?.configured
+                  ? serverForm.alertRules
+                  : {
+                      configured: true,
+                      muted: false,
+                      onOutage: true,
+                      onFailedSvc: true,
+                      cpuThreshold: 90,
+                      ramThreshold: 90,
+                      diskThreshold: 85,
+                      cooldownMin: 10,
+                    };
+                const patchRules = (patch: Partial<typeof rules>) =>
+                  setServerForm(
+                    main.ServerConfig.createFrom({
+                      ...serverForm,
+                      alertRules: { ...rules, configured: true, ...patch },
+                    })
+                  );
+                return (
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                    <button
+                      type="button"
+                      onClick={() => setAlertRulesOpen((v) => !v)}
+                      className="flex w-full items-center justify-between gap-2 text-start"
+                    >
+                      <div className="flex items-center gap-2">
+                        {rules.muted ? (
+                          <BellOff className="h-4 w-4 text-slate-400" />
+                        ) : (
+                          <Bell className="h-4 w-4 text-cyan-400" />
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                            <span>{ta.alertRules}</span>
+                            {rules.muted && (
+                              <span className="rounded-full bg-slate-700/80 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                                {ta.muted}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-400">{ta.alertRulesSub}</p>
+                        </div>
+                      </div>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-400 transition-transform ${alertRulesOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {alertRulesOpen && (
+                      <div className="mt-3 space-y-3 border-t border-white/10 pt-3 text-xs">
+                        <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2 text-slate-200">
+                          <span>{ta.muteServer}</span>
+                          <input
+                            type="checkbox"
+                            checked={!!rules.muted}
+                            onChange={(e) => patchRules({ muted: e.target.checked })}
+                            className="h-4 w-4 accent-rose-400"
+                          />
+                        </label>
+
+                        <div className={`space-y-2.5 ${rules.muted ? 'pointer-events-none opacity-45' : ''}`}>
+                          <div className="grid grid-cols-2 gap-2">
+                            <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-slate-900/60 px-2.5 py-2 text-[11px] text-slate-300">
+                              <span>{ta.alertOutage}</span>
+                              <input
+                                type="checkbox"
+                                checked={!!rules.onOutage}
+                                onChange={(e) => patchRules({ onOutage: e.target.checked })}
+                                className="h-3.5 w-3.5 accent-cyan-400"
+                              />
+                            </label>
+                            <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-slate-900/60 px-2.5 py-2 text-[11px] text-slate-300">
+                              <span>{ta.alertFailedSvc}</span>
+                              <input
+                                type="checkbox"
+                                checked={!!rules.onFailedSvc}
+                                onChange={(e) => patchRules({ onFailedSvc: e.target.checked })}
+                                className="h-3.5 w-3.5 accent-cyan-400"
+                              />
+                            </label>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="mb-1 block text-[11px] text-slate-400">{ta.cpuLimit}</label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={rules.cpuThreshold}
+                                onChange={(e) =>
+                                  patchRules({ cpuThreshold: Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 0)) })
+                                }
+                                className="w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-1.5 font-mono text-white outline-none focus:border-cyan-400/50"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-[11px] text-slate-400">{ta.ramLimit}</label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={rules.ramThreshold}
+                                onChange={(e) =>
+                                  patchRules({ ramThreshold: Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 0)) })
+                                }
+                                className="w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-1.5 font-mono text-white outline-none focus:border-cyan-400/50"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-[11px] text-slate-400">{ta.diskLimit}</label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={rules.diskThreshold}
+                                onChange={(e) =>
+                                  patchRules({ diskThreshold: Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 0)) })
+                                }
+                                className="w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-1.5 font-mono text-white outline-none focus:border-cyan-400/50"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-[11px] text-slate-400">{ta.cooldownMin}</label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={1440}
+                                value={rules.cooldownMin}
+                                onChange={(e) =>
+                                  patchRules({ cooldownMin: Math.max(1, Math.min(1440, parseInt(e.target.value, 10) || 10)) })
+                                }
+                                className="w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-1.5 font-mono text-white outline-none focus:border-cyan-400/50"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-slate-500">{ta.zeroDisable}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {testResult && (
                 <div
