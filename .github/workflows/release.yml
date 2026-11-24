@@ -49,18 +49,20 @@ jobs:
           fi
           echo "[OK] Zero-telemetry and static safety checks passed."
 
-      - name: Run go vet & govulncheck
-        run: |
-          go vet ./...
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          "$(go env GOPATH)/bin/govulncheck" ./...
-
       - name: Run npm production vulnerability audit & TypeScript build check
         working-directory: frontend
         run: |
           npm ci
           npm audit --omit=dev --audit-level=high
           npm run build
+
+      - name: Run go vet & govulncheck
+        env:
+          GOFLAGS: -tags=webkit2_41
+        run: |
+          go vet -tags webkit2_41 ./...
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          "$(go env GOPATH)/bin/govulncheck" ./...
 
   build-windows:
     name: Windows (${{ matrix.arch }})
