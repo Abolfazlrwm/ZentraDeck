@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -57,6 +58,16 @@ func encodePSUTF16LE(script string) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
+func resolvePowerShellPath() string {
+	if root := os.Getenv("SystemRoot"); root != "" {
+		candidate := filepath.Join(root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+	return "powershell.exe"
+}
+
 func platformNotify(title, body, iconPath string) error {
 	ensureWindowsAppID(iconPath)
 
@@ -87,7 +98,7 @@ func platformNotify(title, body, iconPath string) error {
 	)
 
 	cmd := exec.Command(
-		"powershell.exe",
+		resolvePowerShellPath(),
 		"-NoProfile",
 		"-NonInteractive",
 		"-ExecutionPolicy", "Bypass",

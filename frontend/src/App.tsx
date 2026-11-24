@@ -93,6 +93,8 @@ import { LANGUAGES, LanguageCode, translations } from './i18n';
 import { getAlertStrings } from './alertI18n';
 import PtyTerminal, { type PtyContainerTarget } from './PtyTerminal';
 import { getPtyStrings } from './ptyI18n';
+import SftpManager from './SftpManager';
+import { getSftpStrings } from './sftpI18n';
 import { HELP_TOOLTIPS } from './helpTooltips';
 import { DONATION_WALLETS } from './wallets';
 
@@ -141,7 +143,7 @@ interface ConfirmDialogState {
   onConfirm: () => void;
 }
 
-type ServerTab = 'overview' | 'processes' | 'docker' | 'services' | 'network' | 'terminal';
+type ServerTab = 'overview' | 'processes' | 'docker' | 'services' | 'network' | 'files' | 'terminal';
 
 const MAX_HISTORY = 30;
 const DOT = '\u2022';
@@ -296,8 +298,16 @@ export default function App() {
   const [viewPage, setViewPage] = useState<'server' | 'fleet'>('server');
   const [activeTab, setActiveTab] = useState<ServerTab>('overview');
   const [termMode, setTermMode] = useState<'pty' | 'quick'>('pty');
-  const [ptyContainer, setPtyContainer] = useState<PtyContainerTarget | null>(null);
-  const [ptyMounted, setPtyMounted] = useState(false);
+  const [ptyTargets, setPtyTargets] = useState<Record<string, PtyContainerTarget | null>>({});
+  const [mountedPtyIds, setMountedPtyIds] = useState<string[]>([]);
+  const [ptyStatusMap, setPtyStatusMap] = useState<Record<string, 'connecting' | 'connected' | 'disconnected'>>({});
+  const [sftpMounted, setSftpMounted] = useState(false);
+  const serverTabMapRef = useRef<Record<string, ServerTab>>({});
+  const prevSelectedIdRef = useRef<string>('');
+  const activeTabRef = useRef<ServerTab>(activeTab);
+  activeTabRef.current = activeTab;
+  const ptyStatusRef = useRef<Record<string, 'connecting' | 'connected' | 'disconnected'>>(ptyStatusMap);
+  ptyStatusRef.current = ptyStatusMap;
   const [selectedId, setSelectedId] = useState<string>('');
 
   const [metricsMap, setMetricsMap] = useState<Record<string, main.ServerMetrics>>({});
@@ -398,7 +408,7 @@ export default function App() {
 
   // Auto-fallback from Pro-only tabs when switching to Simple
   useEffect(() => {
-    if (!isPro && (activeTab === 'network' || activeTab === 'terminal')) {
+    if (!isPro && (activeTab === 'network' || activeTab === 'files' || activeTab === 'terminal')) {
       setActiveTab('overview');
     }
   }, [isPro, activeTab]);
@@ -734,22 +744,57 @@ export default function App() {
     }
   };
 
+  // Per-server remembered tab + auto-dispose disconnected PTYs on server switch
   useEffect(() => {
-    setPtyContainer(null);
-    setPtyMounted(false);
-  }, [selectedId]);
+    const prevId = prevSelectedIdRef.current;
+    if (prevId && prevId !== selectedId) {
+      serverTabMapRef.current[prevId] = activeTabRef.current;
+      setMountedPtyIds((prev) =>
+        prev.filter(
+          (id) =>
+            id === selectedId ||
+            ptyStatusRef.current[id] === 'connected' ||
+            ptyStatusRef.current[id] === 'connecting'
+        )
+      );
+    }
+    prevSelectedIdRef.current = selectedId;
+
+    if (selectedId) {
+      const remembered = serverTabMapRef.current[selectedId] || 'overview';
+      const safeTab =
+        !isPro && (remembered === 'network' || remembered === 'files' || remembered === 'terminal')
+          ? 'overview'
+          : remembered;
+      setActiveTab(safeTab);
+    }
+  }, [selectedId, isPro]);
 
   useEffect(() => {
-    if (activeTab === 'terminal' && isPro) {
-      setPtyMounted(true);
+    if (isPro && activeTab === 'terminal' && termMode === 'pty' && selectedId) {
+      setMountedPtyIds((prev) => (prev.includes(selectedId) ? prev : [...prev, selectedId]));
     }
-  }, [activeTab, isPro]);
+    if (isPro && activeTab === 'files') {
+      setSftpMounted(true);
+    }
+  }, [activeTab, termMode, isPro, selectedId]);
+
+  // Clean up PTY instances if a server is deleted or demo mode is toggled
+  useEffect(() => {
+    const validIds = new Set(activeServers.map((s) => s.id));
+    setMountedPtyIds((prev) => {
+      const next = prev.filter((id) => validIds.has(id));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [activeServers]);
 
   const handleOpenDockerShell = (target: PtyContainerTarget) => {
+    if (!selectedServer) return;
     if (!isPro) {
       updateSettings({ viewMode: 'pro' });
     }
-    setPtyContainer(target);
+    setPtyTargets((prev) => ({ ...prev, [selectedServer.id]: target }));
+    setMountedPtyIds((prev) => (prev.includes(selectedServer.id) ? prev : [...prev, selectedServer.id]));
     setTermMode('pty');
     setActiveTab('terminal');
   };
@@ -966,6 +1011,7 @@ export default function App() {
       badge: openPorts.length,
       proOnly: true,
     },
+    { id: 'files', label: getSftpStrings(settings.language).tabFiles, icon: <FolderOpen className="h-3.5 w-3.5" />, proOnly: true },
     { id: 'terminal', label: t.tabTerminal, icon: <Terminal className="h-3.5 w-3.5" />, proOnly: true },
   ];
 
@@ -988,7 +1034,7 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base font-bold tracking-tight text-white">ZentraDeck</span>
-                <button type="button" onClick={() => BrowserOpenURL('https://github.com/CyberRhythm/ZentraDeck/releases')} title="View releases on GitHub" className="cursor-pointer transition hover:border-cyan-400/50 hover:text-cyan-300 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300">v0.2.0</button>
+                <button type="button" onClick={() => BrowserOpenURL('https://github.com/CyberRhythm/ZentraDeck/releases')} title="View releases on GitHub" className="cursor-pointer transition hover:border-cyan-400/50 hover:text-cyan-300 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300">v0.3.0</button>
               </div>
               <p className="text-[11px] text-slate-400">{t.openSourceFree}</p>
             </div>
@@ -1114,6 +1160,15 @@ export default function App() {
                       {maskText(srv.host, settings.privacyMode)}
                     </span>
                     <div className="flex items-center gap-1">
+                      {ptyStatusMap[srv.id] === 'connected' && (
+                        <span
+                          title="Active PTY terminal session"
+                          className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-300 ring-1 ring-emerald-400/25"
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          PTY
+                        </span>
+                      )}
                       {srv.useProxy && (
                         <span className="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300">
                           SOCKS5
@@ -2538,8 +2593,20 @@ export default function App() {
                 </div>
               )}
 
+              {/* TAB 6: SFTP FILE MANAGER & QUICK EDITOR (PRO) */}
+              {isPro && selectedServer && (activeTab === 'files' || sftpMounted) && (
+                <div className={activeTab === 'files' ? 'block' : 'hidden'}>
+                  <SftpManager
+                    serverId={selectedServer.id}
+                    serverName={selectedServer.name}
+                    language={settings.language}
+                    onToast={pushToast}
+                  />
+                </div>
+              )}
+
               {/* TAB 6: QUICK TERMINAL (PRO) */}
-              {isPro && (activeTab === 'terminal' || ptyMounted) && (
+              {isPro && (activeTab === 'terminal' || mountedPtyIds.length > 0) && (
                 <div
                   className={`${
                     activeTab === 'terminal' ? 'flex' : 'hidden'
@@ -2601,17 +2668,33 @@ export default function App() {
                     )}
                   </div>
 
-                  {termMode === 'pty' && selectedServer ? (
-                    <PtyTerminal
-                      serverId={selectedServer.id}
-                      serverName={selectedServer.name}
-                      username={selectedServer.username}
-                      language={settings.language}
-                      containerTarget={ptyContainer}
-                      isVisible={activeTab === 'terminal' && termMode === 'pty'}
-                      onExitContainer={() => setPtyContainer(null)}
-                    />
-                  ) : (
+                  {mountedPtyIds.map((pid) => {
+                    const srv = activeServers.find((s) => s.id === pid);
+                    if (!srv) return null;
+                    const visible =
+                      activeTab === 'terminal' && termMode === 'pty' && selectedServer?.id === pid;
+                    return (
+                      <div key={pid} className={visible ? 'block' : 'hidden'}>
+                        <PtyTerminal
+                          serverId={srv.id}
+                          serverName={srv.name}
+                          username={srv.username}
+                          language={settings.language}
+                          containerTarget={ptyTargets[pid] || null}
+                          isVisible={visible}
+                          onStatusChange={(st) =>
+                            setPtyStatusMap((prev) =>
+                              prev[pid] === st ? prev : { ...prev, [pid]: st }
+                            )
+                          }
+                          onExitContainer={() =>
+                            setPtyTargets((prev) => ({ ...prev, [pid]: null }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                  {termMode === 'quick' && (
                     <>
                   {/* Categorized Command Presets */}
                   <div className="mb-3 rounded-xl border border-white/10 bg-slate-950/55 p-2.5">

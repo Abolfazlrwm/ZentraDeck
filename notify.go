@@ -118,6 +118,7 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 
 	if !quit && minTray {
 		a.setWindowHidden(true)
+		go trimProcessMemory()
 		wailsruntime.WindowHide(ctx)
 		return true
 	}
@@ -126,6 +127,7 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 
 func (a *App) shutdown(ctx context.Context) {
 	a.closeAllPTY()
+	a.closeAllSFTP()
 	a.stopTray()
 }
 

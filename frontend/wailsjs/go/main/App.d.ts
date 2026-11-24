@@ -38,6 +38,24 @@ export function ResizePTY(arg1:string,arg2:number,arg3:number):Promise<void>;
 
 export function RunQuickCommand(arg1:string,arg2:string):Promise<main.CommandOutput>;
 
+export function SFTPDelete(arg1:string,arg2:string):Promise<main.ActionResult>;
+
+export function SFTPDownloadFile(arg1:string,arg2:string):Promise<main.ActionResult>;
+
+export function SFTPListDir(arg1:string,arg2:string):Promise<main.DirListResult>;
+
+export function SFTPMkdir(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
+
+export function SFTPNewFile(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
+
+export function SFTPReadFile(arg1:string,arg2:string):Promise<main.FileContentResult>;
+
+export function SFTPRename(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
+
+export function SFTPUploadFile(arg1:string,arg2:string):Promise<main.ActionResult>;
+
+export function SFTPWriteFile(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
+
 export function SaveServer(arg1:main.ServerConfig):Promise<main.ServerConfig>;
 
 export function SaveSettings(arg1:main.AppSettings):Promise<main.AppSettings>;

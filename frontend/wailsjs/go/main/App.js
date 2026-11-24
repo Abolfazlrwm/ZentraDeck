@@ -74,6 +74,42 @@ export function RunQuickCommand(arg1, arg2) {
   return window['go']['main']['App']['RunQuickCommand'](arg1, arg2);
 }
 
+export function SFTPDelete(arg1, arg2) {
+  return window['go']['main']['App']['SFTPDelete'](arg1, arg2);
+}
+
+export function SFTPDownloadFile(arg1, arg2) {
+  return window['go']['main']['App']['SFTPDownloadFile'](arg1, arg2);
+}
+
+export function SFTPListDir(arg1, arg2) {
+  return window['go']['main']['App']['SFTPListDir'](arg1, arg2);
+}
+
+export function SFTPMkdir(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPMkdir'](arg1, arg2, arg3);
+}
+
+export function SFTPNewFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPNewFile'](arg1, arg2, arg3);
+}
+
+export function SFTPReadFile(arg1, arg2) {
+  return window['go']['main']['App']['SFTPReadFile'](arg1, arg2);
+}
+
+export function SFTPRename(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPRename'](arg1, arg2, arg3);
+}
+
+export function SFTPUploadFile(arg1, arg2) {
+  return window['go']['main']['App']['SFTPUploadFile'](arg1, arg2);
+}
+
+export function SFTPWriteFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPWriteFile'](arg1, arg2, arg3);
+}
+
 export function SaveServer(arg1) {
   return window['go']['main']['App']['SaveServer'](arg1);
 }

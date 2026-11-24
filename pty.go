@@ -195,7 +195,7 @@ func (a *App) StartPTY(serverID, containerID string, cols, rows int) PTYStartRes
 	a.ptyMu.Unlock()
 
 	streamPipe := func(r io.Reader) {
-		buf := make([]byte, 8192)
+		buf := make([]byte, 4096)
 		for {
 			n, rerr := r.Read(buf)
 			if n > 0 {

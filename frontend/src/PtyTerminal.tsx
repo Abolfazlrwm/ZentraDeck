@@ -31,6 +31,7 @@ interface PtyTerminalProps {
   language: string;
   containerTarget: PtyContainerTarget | null;
   isVisible?: boolean;
+  onStatusChange?: (status: 'connecting' | 'connected' | 'disconnected') => void;
   onExitContainer?: () => void;
 }
 
@@ -98,6 +99,7 @@ export default function PtyTerminal({
   language,
   containerTarget,
   isVisible = true,
+  onStatusChange,
   onExitContainer,
 }: PtyTerminalProps) {
   const tp = getPtyStrings(language);
@@ -119,6 +121,18 @@ export default function PtyTerminal({
   const [copiedFlash, setCopiedFlash] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [fontSize, setFontSize] = useState(13);
+  const onStatusChangeRef = useRef(onStatusChange);
+  onStatusChangeRef.current = onStatusChange;
+
+  useEffect(() => {
+    onStatusChangeRef.current?.(status);
+  }, [status]);
+
+  useEffect(() => {
+    return () => {
+      onStatusChangeRef.current?.('disconnected');
+    };
+  }, []);
 
   const closeActive = useCallback(() => {
     const sid = sessionIdRef.current;
@@ -243,7 +257,7 @@ export default function PtyTerminal({
       fontFamily: '"JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace',
       fontSize: 13,
       lineHeight: 1.25,
-      scrollback: 5000,
+      scrollback: 1500,
       theme: {
         background: '#070b14',
         foreground: '#e2e8f0',
