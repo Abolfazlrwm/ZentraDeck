@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZentraDeck — Lightweight, Agentless Linux Server Command Center</title>
-  <meta name="description" content="Monitor and control Linux servers over plain SSH (~15 MB Go core, zero server agents, AES-256-GCM vault, zero telemetry). Built with Go, Wails, React, and TypeScript.">
+  <title>ZentraDeck v0.3.0 — Ultra-Light, Zero-Telemetry Linux Server Command Center</title>
+  <meta name="description" content="All-in-one Linux server command center over plain SSH: Interactive PTY Terminal, Atomic SFTP Editor, Docker/Systemd Control, System Tray Alerts, <15 MB Go core, AES-256-GCM vault, 11 languages, and zero telemetry.">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" type="image/png" href="./screenshots/overview.png">
   <style>
@@ -24,7 +24,7 @@
         linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
     }
     .glass {
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.78) 0%, rgba(9, 14, 26, 0.86) 100%);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.78) 0%, rgba(9, 14, 26, 0.88) 100%);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(148, 163, 184, 0.14);
@@ -43,26 +43,26 @@
   <div class="pointer-events-none fixed top-[35%] right-[-120px] w-[420px] h-[420px] rounded-full bg-indigo-500/10 blur-[120px] -z-10"></div>
 
   <!-- Navbar -->
-  <header class="sticky top-0 z-40 border-b border-slate-800/70 bg-[#060911]/80 backdrop-blur-xl">
+  <header class="sticky top-0 z-40 border-b border-slate-800/70 bg-[#060911]/85 backdrop-blur-xl">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
       <a href="#" class="flex items-center gap-2.5 shrink-0">
         <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.9)]"></span>
         <span class="font-extrabold text-lg tracking-tight text-white">ZentraDeck</span>
-        <span class="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">v0.2.0</span>
+        <span class="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">v0.3.0</span>
       </a>
 
       <nav class="hidden lg:flex items-center gap-6 text-sm text-slate-300">
-        <a href="#why" class="hover:text-cyan-300 transition">Why</a>
+        <a href="#pillars" class="hover:text-cyan-300 transition">Why</a>
         <a href="#features" class="hover:text-cyan-300 transition">Features</a>
         <a href="#compare" class="hover:text-cyan-300 transition">Compare</a>
-        <a href="#security" class="hover:text-cyan-300 transition">Privacy</a>
+        <a href="#security" class="hover:text-emerald-300 transition">Security</a>
         <a href="#downloads" class="hover:text-cyan-300 transition">Downloads</a>
         <a href="#build" class="hover:text-cyan-300 transition">Source</a>
       </nav>
 
       <div class="flex items-center gap-2.5 shrink-0">
         <a href="#downloads" class="hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 text-xs font-bold transition shadow-md shadow-cyan-500/20">
-          Get v0.2.0
+          Get v0.3.0
         </a>
         <a href="https://github.com/CyberRhythm/ZentraDeck" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg glass hover:border-slate-600 text-xs font-semibold text-white transition">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.024A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.293 2.747-1.024 2.747-1.024.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.137 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
@@ -76,47 +76,53 @@
   <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16">
     <div class="grid lg:grid-cols-12 gap-10 items-center">
       <div class="lg:col-span-5 space-y-6">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-xs font-mono">
-          <span>~15 MB Go Core</span>
+        <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-xs font-mono">
+          <span class="font-bold">&lt;15 MB Go Core</span>
           <span class="text-slate-600">•</span>
-          <span>No Server Agent</span>
+          <span class="text-emerald-300 font-semibold">Zero Telemetry</span>
+          <span class="text-slate-600">•</span>
+          <span>0 Server Agents</span>
           <span class="text-slate-600">•</span>
           <span>MIT</span>
         </div>
 
-        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.12] text-white">
-          Linux server command over <span class="bg-gradient-to-r from-cyan-300 via-sky-400 to-indigo-400 bg-clip-text text-transparent">plain SSH.</span>
+        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.1] text-white">
+          Full Linux server command over <span class="bg-gradient-to-r from-cyan-300 via-sky-400 to-indigo-400 bg-clip-text text-transparent">plain SSH.</span>
         </h1>
 
         <p class="text-slate-300 text-base leading-relaxed">
-          Native desktop command center for <strong>Ubuntu, Debian, AlmaLinux, Rocky, CentOS, and AWS EC2</strong>. Zero remote agents, no cloud account, no telemetry, and no locked pro features.
+          One native desktop command center packing <strong>Interactive PTY Terminal</strong>, <strong>Atomic SFTP File Editor</strong>, <strong>Docker &amp; Systemd Controls</strong>, <strong>Live Fleet Telemetry</strong>, and <strong>Background System Tray Alerts</strong>—engineered to run under <strong>15 MB Go RAM</strong> with <strong>100% local, zero-telemetry privacy</strong>.
         </p>
 
         <div class="flex flex-wrap items-center gap-3 pt-1">
-          <a id="hero-dl-btn" href="https://github.com/CyberRhythm/ZentraDeck/releases" class="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-sm transition shadow-lg shadow-cyan-500/20">
+          <a id="hero-dl-btn" href="https://github.com/CyberRhythm/ZentraDeck/releases/tag/v0.3.0" class="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-sm transition shadow-lg shadow-cyan-500/20">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            <span id="hero-dl-label">Download v0.2.0</span>
+            <span id="hero-dl-label">Download v0.3.0</span>
           </a>
           <a href="#downloads" class="inline-flex items-center gap-2 px-4 py-3 rounded-xl glass hover:border-slate-600 text-sm font-semibold text-slate-200 transition">
-            All Platforms
+            All 17 Packages
           </a>
-          <a href="https://github.com/CyberRhythm/ZentraDeck/releases" target="_blank" rel="noopener" class="text-sm font-medium text-slate-400 hover:text-cyan-300 px-2 transition">
-            Releases ↗
+          <a href="https://github.com/CyberRhythm/ZentraDeck/releases/tag/v0.3.0" target="_blank" rel="noopener" class="text-sm font-medium text-slate-400 hover:text-cyan-300 px-2 transition">
+            Changelog ↗
           </a>
         </div>
 
-        <div class="grid grid-cols-3 gap-3 pt-2">
-          <div class="p-3.5 rounded-xl glass">
-            <div class="text-base sm:text-lg font-bold text-white font-mono">~15 MB</div>
-            <div class="text-[11px] text-slate-400">Go Process RAM</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 pt-2">
+          <div class="p-3.5 rounded-xl glass border-cyan-500/20">
+            <div class="text-base sm:text-lg font-extrabold text-cyan-300 font-mono">&lt;15 MB</div>
+            <div class="text-[11px] text-slate-300">Tuned Go Core RAM</div>
+          </div>
+          <div class="p-3.5 rounded-xl glass border-emerald-500/20">
+            <div class="text-base sm:text-lg font-extrabold text-emerald-300 font-mono">100% Local</div>
+            <div class="text-[11px] text-slate-300">Audited Zero Telemetry</div>
           </div>
           <div class="p-3.5 rounded-xl glass">
-            <div class="text-base sm:text-lg font-bold text-emerald-300 font-mono">0 Agents</div>
-            <div class="text-[11px] text-slate-400">On Target VPS</div>
+            <div class="text-base sm:text-lg font-extrabold text-indigo-300 font-mono">All-in-One</div>
+            <div class="text-[11px] text-slate-300">PTY · SFTP · Docker · Tray</div>
           </div>
           <div class="p-3.5 rounded-xl glass">
-            <div class="text-base sm:text-lg font-bold text-cyan-300 font-mono">AES-256</div>
-            <div class="text-[11px] text-slate-400">Local Vault</div>
+            <div class="text-base sm:text-lg font-extrabold text-white font-mono">11 Languages</div>
+            <div class="text-[11px] text-slate-300">100% Localized + RTL</div>
           </div>
         </div>
       </div>
@@ -129,7 +135,7 @@
               <span class="w-3 h-3 rounded-full bg-rose-500/70"></span>
               <span class="w-3 h-3 rounded-full bg-amber-400/70"></span>
               <span class="w-3 h-3 rounded-full bg-emerald-400/70"></span>
-              <span class="ml-2 text-xs font-mono text-slate-400">zentradeck — desktop</span>
+              <span class="ml-2 text-xs font-mono text-slate-400">zentradeck v0.3.0 — desktop</span>
             </div>
 
             <div class="flex items-center gap-1 p-0.5 rounded-lg bg-slate-950/80 border border-slate-800">
@@ -145,99 +151,140 @@
 
           <div class="px-4 py-2.5 border-t border-slate-800/70 bg-slate-900/50 flex items-center justify-between text-xs text-slate-400">
             <span id="prev-caption">Health Score (0–100), live CPU/RAM/Network charts &amp; storage partitions</span>
-            <span class="font-mono text-[11px] text-cyan-300/90 hidden sm:inline">Go + Wails + React</span>
+            <span class="font-mono text-[11px] text-cyan-300/90 hidden sm:inline">Go + Wails + React + xterm.js</span>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Why ZentraDeck -->
-  <section id="why" class="py-16 border-t border-slate-800/70 bg-[#080d18]/75">
+  <!-- 3 Core Pillars: Low RAM, Security, Power -->
+  <section id="pillars" class="py-16 border-t border-slate-800/70 bg-[#080d18]/75">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
       <div class="max-w-3xl space-y-2.5">
-        <span class="text-xs font-mono uppercase tracking-wider text-cyan-400">Why ZentraDeck?</span>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Skip heavy VPS agents and 400 MB Electron wrappers.</h2>
+        <span class="text-xs font-mono uppercase tracking-wider text-cyan-400">Core Engineering Pillars</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Maximum server control. Minimal RAM. Zero compromise on security.</h2>
         <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-          Small 512 MB or 1 GB cloud instances shouldn't run another background monitoring stack just to show basic metrics, and desktop SSH tools shouldn't eat hundreds of megabytes of RAM or lock core features behind a subscription.
+          Built for developers and sysadmins tired of 400 MB Electron wrappers, intrusive VPS monitoring daemons, and paywalled SSH tools. Everything runs locally on your machine with strict memory and security budgets.
         </p>
       </div>
 
       <div class="grid md:grid-cols-3 gap-5">
-        <div class="p-6 rounded-2xl glass glass-card transition duration-200 space-y-2">
-          <div class="text-xs font-mono text-cyan-400">01 / AGENTLESS</div>
-          <h3 class="text-lg font-bold text-white">Standard SSH only</h3>
+        <div class="p-6 rounded-2xl glass glass-card border-cyan-500/25 transition duration-200 space-y-3">
+          <div class="inline-flex items-center gap-2 text-xs font-mono font-bold text-cyan-300">
+            <span class="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30">01 / ULTRA-LIGHTWEIGHT</span>
+          </div>
+          <h3 class="text-xl font-extrabold text-white">&lt;15 MB Go Core &amp; 0 VPS Agents</h3>
           <p class="text-sm text-slate-300 leading-relaxed">
-            Uses password auth, <code class="text-cyan-300">.pem</code> / <code class="text-cyan-300">.key</code> files, or <code class="text-cyan-300">~/.ssh/config</code> entries. Zero daemons or extra ports on your servers.
+            Enforced Go GC ceiling (<code class="text-cyan-300">GOGC=25</code>, <code class="text-cyan-300">GOMEMLIMIT=14 MiB</code>) plus automatic OS working-set trimming keeps idle memory tiny while Wails reuses your OS WebView. On your servers: <strong>zero agents, zero extra ports</strong>—plain SSH only.
           </p>
         </div>
 
-        <div class="p-6 rounded-2xl glass glass-card transition duration-200 space-y-2">
-          <div class="text-xs font-mono text-emerald-400">02 / LIGHTWEIGHT</div>
-          <h3 class="text-lg font-bold text-white">~15 MB Go core + OS WebView</h3>
+        <div class="p-6 rounded-2xl glass glass-card border-emerald-500/25 transition duration-200 space-y-3">
+          <div class="inline-flex items-center gap-2 text-xs font-mono font-bold text-emerald-300">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30">02 / HARDENED SECURITY</span>
+          </div>
+          <h3 class="text-xl font-extrabold text-white">Audited Zero-Telemetry &amp; Encrypted Vault</h3>
           <p class="text-sm text-slate-300 leading-relaxed">
-            The Go backend runs around ~15 MB RAM while Wails reuses your native OS WebView (WebView2/WebKit) instead of bundling Chromium.
+            Every release must pass an automated CI security gate (<code class="text-emerald-300">govulncheck</code>, <code class="text-emerald-300">npm audit</code>, static zero-telemetry checks). Credentials use <strong>AES-256-GCM</strong> via your <strong>OS Keychain</strong>, SSH keys verify via <strong>TOFU</strong>, and every binary ships with <code class="text-emerald-300">SHA256SUMS.txt</code>.
           </p>
         </div>
 
-        <div class="p-6 rounded-2xl glass glass-card transition duration-200 space-y-2">
-          <div class="text-xs font-mono text-indigo-400">03 / INDEPENDENT</div>
-          <h3 class="text-lg font-bold text-white">Free forever under MIT</h3>
+        <div class="p-6 rounded-2xl glass glass-card border-indigo-500/25 transition duration-200 space-y-3">
+          <div class="inline-flex items-center gap-2 text-xs font-mono font-bold text-indigo-300">
+            <span class="px-2 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30">03 / ALL-IN-ONE POWER</span>
+          </div>
+          <h3 class="text-xl font-extrabold text-white">Replaces 4+ Tools — Free Forever</h3>
           <p class="text-sm text-slate-300 leading-relaxed">
-            Both Simple Mode and Pro Mode are included with no cloud accounts, no paywalls, and no telemetry.
+            Combines a full <strong>Interactive PTY Terminal</strong>, <strong>Atomic SFTP File Editor</strong>, <strong>Fleet &amp; Process Monitor</strong>, <strong>Docker/Systemd Manager</strong>, and <strong>System Tray Alerter</strong>. Both Simple Mode &amp; Pro Mode are 100% free under MIT.
           </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Features Grid -->
+  <!-- Complete Features Grid (12 Cards) -->
   <section id="features" class="py-16 border-t border-slate-800/70">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
-      <div class="max-w-2xl space-y-2">
-        <span class="text-xs font-mono uppercase tracking-wider text-cyan-400">Features</span>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Simple Mode &amp; Pro Mode included</h2>
+      <div class="max-w-3xl space-y-2">
+        <span class="text-xs font-mono uppercase tracking-wider text-cyan-400">Everything Included in v0.3.0</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">A complete Linux command deck—Simple Mode &amp; Pro Mode unlocked</h2>
         <p class="text-slate-400 text-sm sm:text-base">
-          Switch between clean everyday essentials and full Pro diagnostics whenever you need deeper control.
+          Switch effortlessly between clean everyday essentials and deep Pro diagnostics across Ubuntu, Debian, AlmaLinux, Rocky, CentOS, Fedora, Arch, and AWS EC2.
         </p>
       </div>
 
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
-          <h3 class="font-bold text-white">Fleet Overview &amp; Latency</h3>
-          <p class="text-sm text-slate-300">Monitor all servers together with online status, latency, uptime, and CPU/RAM/disk bars.</p>
+        <div class="p-5 rounded-2xl glass glass-card border-cyan-500/25 transition duration-200 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-bold text-white">Interactive PTY Terminal &amp; Docker Shell</h3>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">NEW v0.3</span>
+          </div>
+          <p class="text-sm text-slate-300 leading-relaxed">Full <code class="text-cyan-300">@xterm/xterm</code> PTY supporting <strong>htop, vim, nano, sudo</strong>, 1-click container shells, fullscreen, font zoom, and a green <strong>PTY</strong> sidebar indicator so active shells are never forgotten.</p>
         </div>
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
+
+        <div class="p-5 rounded-2xl glass glass-card border-cyan-500/25 transition duration-200 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-bold text-white">Hardened SFTP &amp; Atomic Config Editor</h3>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">NEW v0.3</span>
+          </div>
+          <p class="text-sm text-slate-300 leading-relaxed">Browse, upload, download, rename, and edit configs with <strong>atomic POSIX writes</strong> (zero half-written configs), Undo/Redo, Find &amp; Replace, persistent pooled channels, and critical Linux path guards.</p>
+        </div>
+
+        <div class="p-5 rounded-2xl glass glass-card border-cyan-500/25 transition duration-200 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-bold text-white">System Tray &amp; Native Desktop Alerts</h3>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">NEW v0.3</span>
+          </div>
+          <p class="text-sm text-slate-300 leading-relaxed">Minimize to the system tray (Windows &amp; Linux) for silent fleet monitoring with <strong>per-server CPU, RAM, Disk &amp; Offline alert thresholds</strong> delivered via native OS notifications.</p>
+        </div>
+
+        <div class="p-5 rounded-2xl glass glass-card border-cyan-500/25 transition duration-200 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-bold text-white">Per-Server Workspace Isolation</h3>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">NEW v0.3</span>
+          </div>
+          <p class="text-sm text-slate-300 leading-relaxed">Each server remembers its active tab, live PTY shell, and cached SFTP folder for <strong>instant (0ms) switching</strong>—while entering a new server safely lands on Overview.</p>
+        </div>
+
+        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-2">
+          <h3 class="font-bold text-white">Fleet Overview &amp; Live Latency</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">Track every server in one clean grid with real-time online status, SSH latency, uptime, and CPU/RAM/disk utilization bars.</p>
+        </div>
+
+        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-2">
           <h3 class="font-bold text-white">Health Score &amp; Live Charts</h3>
-          <p class="text-sm text-slate-300">0–100 health score, load average, swap, firewall status, live CPU/RAM &amp; network graphs, and partitions.</p>
+          <p class="text-sm text-slate-300 leading-relaxed">Instant 0–100 health score, load averages, swap telemetry, firewall state, live CPU/RAM/network graphs, and full storage partition breakdown.</p>
         </div>
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
+
+        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-2">
           <h3 class="font-bold text-white">Sortable Live Task Manager</h3>
-          <p class="text-sm text-slate-300">Inspect remote processes and sort live by CPU, RAM, or PID to catch bottlenecks fast.</p>
+          <p class="text-sm text-slate-300 leading-relaxed">Inspect running remote processes and sort live by CPU, RAM, or PID to catch runaway processes and bottlenecks in seconds.</p>
         </div>
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
+
+        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-2">
           <h3 class="font-bold text-white">Docker &amp; Systemd Controls</h3>
-          <p class="text-sm text-slate-300">View container and service statuses and run common actions right from the deck.</p>
+          <p class="text-sm text-slate-300 leading-relaxed">Start, stop, restart, inspect logs for containers and systemd services, and jump directly into any container's interactive shell in one click.</p>
         </div>
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
-          <h3 class="font-bold text-white">Open Ports &amp; Firewall</h3>
-          <p class="text-sm text-slate-300">Inspect listening ports and firewall state to keep exposed services visible.</p>
+
+        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-2">
+          <h3 class="font-bold text-white">Open Ports &amp; Firewall Audit</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">View listening TCP/UDP ports, bound processes, and firewall rules to keep exposed attack surfaces visible at all times.</p>
         </div>
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
-          <h3 class="font-bold text-white">Live Streaming Terminal</h3>
-          <p class="text-sm text-slate-300">Stream command output live, use categorized presets, and hit Stop anytime to cancel commands.</p>
+
+        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-2">
+          <h3 class="font-bold text-white">Per-Server SOCKS5 Proxy &amp; SSH Config</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">Route individual servers through custom SOCKS5 proxies without touching system settings, and import keys or <code class="text-cyan-300">~/.ssh/config</code> effortlessly.</p>
         </div>
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
-          <h3 class="font-bold text-white">Per-Server SOCKS5 Proxy</h3>
-          <p class="text-sm text-slate-300">Configure SOCKS5 proxy routing per server without touching system-wide network settings.</p>
+
+        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-2">
+          <h3 class="font-bold text-white">11 Languages (100% Complete + Persian RTL)</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">Every screen—including PTY, SFTP &amp; Alerts—is fully localized in English, فارسی (RTL + offline Vazirmatn), 中文, Deutsch, Français, Español, Português, Русский, 日本語, 한국어 &amp; Bahasa Indonesia.</p>
         </div>
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
-          <h3 class="font-bold text-white">11 Languages (incl. Persian RTL) &amp; Help Tooltips</h3>
-          <p class="text-sm text-slate-300">Localized UI across 11 languages — including full Persian (فارسی) RTL with offline Vazirmatn — plus inline contextual help tooltips on every section.</p>
-        </div>
-        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-1.5">
+
+        <div class="p-5 rounded-2xl glass glass-card transition duration-200 space-y-2">
           <h3 class="font-bold text-white">Demo Sandbox &amp; Privacy Mode</h3>
-          <p class="text-sm text-slate-300">Try multi-server metrics immediately in Demo Sandbox and mask sensitive details with Privacy Mode.</p>
+          <p class="text-sm text-slate-300 leading-relaxed">Test the full multi-server dashboard offline with zero credentials in Demo Sandbox, and toggle Privacy Mode to mask IPs and hostnames during screen shares.</p>
         </div>
       </div>
     </div>
@@ -248,9 +295,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
       <div class="max-w-3xl space-y-2">
         <span class="text-xs font-mono uppercase tracking-wider text-cyan-400">How It Compares</span>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Where ZentraDeck fits—and where it doesn't</h2>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Where ZentraDeck shines—and where it stays intentionally lean</h2>
         <p class="text-slate-300 text-sm sm:text-base">
-          Built for fast, agentless desktop triage and SSH control—not multi-month metrics warehousing or cloud team sync.
+          Purpose-built for instant, agentless desktop operations over SSH—without heavy Electron runtimes, subscriptions, or cloud lock-in.
         </p>
       </div>
 
@@ -259,47 +306,54 @@
           <thead>
             <tr class="border-b border-slate-800 bg-slate-900/80 text-slate-200">
               <th class="py-3.5 px-4 font-bold">Aspect</th>
-              <th class="py-3.5 px-4 font-bold text-cyan-300">ZentraDeck</th>
+              <th class="py-3.5 px-4 font-bold text-cyan-300">ZentraDeck v0.3.0</th>
               <th class="py-3.5 px-4 font-bold">Electron SSH Apps<br><span class="text-xs font-normal text-slate-400">Termius, Tabby</span></th>
               <th class="py-3.5 px-4 font-bold">Agent / Web Tools<br><span class="text-xs font-normal text-slate-400">Netdata, Glances, Cockpit</span></th>
-              <th class="py-3.5 px-4 font-bold">Raw CLI SSH<br><span class="text-xs font-normal text-slate-400">ssh, top, journalctl</span></th>
+              <th class="py-3.5 px-4 font-bold">Raw CLI SSH<br><span class="text-xs font-normal text-slate-400">ssh, top, sftp</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800/80 text-slate-300">
             <tr>
-              <td class="py-3 px-4 font-semibold text-white">Remote Agent</td>
-              <td class="py-3 px-4 text-emerald-300 font-medium">None (SSH only)</td>
-              <td class="py-3 px-4">None</td>
-              <td class="py-3 px-4">Agent / daemon / service</td>
-              <td class="py-3 px-4">None</td>
-            </tr>
-            <tr>
               <td class="py-3 px-4 font-semibold text-white">Desktop RAM</td>
-              <td class="py-3 px-4 text-emerald-300 font-medium">~15 MB Go core + OS WebView</td>
-              <td class="py-3 px-4">Often hundreds of MB</td>
-              <td class="py-3 px-4">Browser / server stack</td>
+              <td class="py-3 px-4 text-emerald-300 font-semibold">&lt;15 MB Go core (GC-tuned) + OS WebView</td>
+              <td class="py-3 px-4">300–600+ MB (Chromium)</td>
+              <td class="py-3 px-4">Browser + server daemon</td>
               <td class="py-3 px-4">Minimal native terminal</td>
             </tr>
             <tr>
-              <td class="py-3 px-4 font-semibold text-white">Cloud Account</td>
-              <td class="py-3 px-4 text-emerald-300 font-medium">Not required (100% local)</td>
-              <td class="py-3 px-4">Often cloud-first</td>
-              <td class="py-3 px-4">Optional / self-hosted</td>
+              <td class="py-3 px-4 font-semibold text-white">Remote Server Agent</td>
+              <td class="py-3 px-4 text-emerald-300 font-semibold">None (Plain SSH &amp; SFTP)</td>
+              <td class="py-3 px-4">None</td>
+              <td class="py-3 px-4">Requires agent / daemon</td>
+              <td class="py-3 px-4">None</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-semibold text-white">Privacy &amp; Telemetry</td>
+              <td class="py-3 px-4 text-emerald-300 font-semibold">100% Local · CI-Audited Zero Telemetry</td>
+              <td class="py-3 px-4">Cloud sync / accounts common</td>
+              <td class="py-3 px-4">Self-hosted or cloud</td>
               <td class="py-3 px-4">Local config files</td>
             </tr>
             <tr>
-              <td class="py-3 px-4 font-semibold text-white">Unified Triage UI</td>
-              <td class="py-3 px-4 text-emerald-300 font-medium">Fleet + tasks + Docker/services</td>
-              <td class="py-3 px-4">Terminal &amp; SFTP focused</td>
-              <td class="py-3 px-4">Deep node / container UI</td>
-              <td class="py-3 px-4">Manual shell commands</td>
+              <td class="py-3 px-4 font-semibold text-white">Built-In Toolkit</td>
+              <td class="py-3 px-4 text-emerald-300 font-semibold">Fleet + PTY + Atomic SFTP + Docker + Tray Alerts</td>
+              <td class="py-3 px-4">Terminal &amp; SFTP (often paywalled)</td>
+              <td class="py-3 px-4">Monitoring focused</td>
+              <td class="py-3 px-4">Manual CLI commands</td>
             </tr>
             <tr>
-              <td class="py-3 px-4 font-semibold text-white">Long-Term History</td>
-              <td class="py-3 px-4 text-slate-400">Live session focus</td>
-              <td class="py-3 px-4 text-slate-400">Session / snippet focus</td>
-              <td class="py-3 px-4 text-cyan-300">Historical retention</td>
-              <td class="py-3 px-4 text-slate-400">External stack needed</td>
+              <td class="py-3 px-4 font-semibold text-white">Linux Packages</td>
+              <td class="py-3 px-4 text-emerald-300 font-semibold">.AppImage, .deb, .rpm, Arch, .tar.gz</td>
+              <td class="py-3 px-4">Varies by vendor</td>
+              <td class="py-3 px-4">Server package / Docker</td>
+              <td class="py-3 px-4">Pre-installed</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-semibold text-white">Pricing</td>
+              <td class="py-3 px-4 text-emerald-300 font-semibold">100% Free Forever (MIT)</td>
+              <td class="py-3 px-4">Freemium / subscription</td>
+              <td class="py-3 px-4">Open source / paid tiers</td>
+              <td class="py-3 px-4">Free</td>
             </tr>
           </tbody>
         </table>
@@ -311,93 +365,126 @@
   <section id="security" class="py-16 border-t border-slate-800/70">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
       <div class="max-w-3xl space-y-2">
-        <span class="text-xs font-mono uppercase tracking-wider text-emerald-400">Security &amp; Privacy</span>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Zero Data Collection Guarantee</h2>
+        <span class="text-xs font-mono uppercase tracking-wider text-emerald-400">Audited Security &amp; Privacy</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Verifiable Zero-Telemetry &amp; Hardened Operations</h2>
         <p class="text-slate-300 text-sm sm:text-base">
-          Your server inventory, credentials, and telemetry stay strictly on your own device.
+          Security isn't a footnote—every release passes an automated pre-release security audit before a single binary is published.
         </p>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-5">
-        <div class="p-6 rounded-2xl glass space-y-2.5 text-sm text-slate-300 leading-relaxed">
-          <h3 class="text-base font-bold text-white">Zero Telemetry &amp; Zero Outbound Calls</h3>
-          <p>• <strong>No telemetry, no analytics, no tracking, and no crash reporters.</strong></p>
-          <p>• <strong>No cloud sync or external servers</strong>—nothing is sent to third parties.</p>
+      <div class="grid md:grid-cols-3 gap-5">
+        <div class="p-6 rounded-2xl glass border-emerald-500/20 space-y-2.5 text-sm text-slate-300 leading-relaxed">
+          <h3 class="text-base font-bold text-white">100% Local · Zero Telemetry</h3>
+          <p>• <strong>No analytics, no tracking, no crash reporters, no cloud accounts.</strong></p>
           <p>• <strong>Zero outbound connections</strong> except to SSH servers (and optional SOCKS5 proxies) you configure.</p>
-          <p>• The version badge opens GitHub Releases in your browser on click—no background update requests.</p>
+          <p>• CI blocks any release if forbidden <code class="text-emerald-300">net/http</code>, <code class="text-emerald-300">fetch</code>, <code class="text-emerald-300">axios</code>, <code class="text-emerald-300">WebSocket</code>, or <code class="text-emerald-300">eval</code> sinks exist.</p>
         </div>
 
-        <div class="p-6 rounded-2xl glass space-y-2.5 text-sm text-slate-300 leading-relaxed">
-          <h3 class="text-base font-bold text-white">OS Keychain Vault, Write-Only Secrets &amp; SSH TOFU</h3>
-          <p>• Saved locally in your OS config folder (<code class="text-cyan-300">~/.config/ZentraDeck</code>, <code class="text-cyan-300">AppData\Roaming\ZentraDeck</code>, or <code class="text-cyan-300">~/Library/Application Support/ZentraDeck</code>).</p>
-          <p>• Encrypted with <strong>AES-256-GCM</strong> using a 256-bit key stored in your <strong>OS Keychain</strong>; secrets are <strong>write-only</strong> in the UI and SSH host keys are verified via <code class="text-cyan-300">known_hosts</code> / TOFU.</p>
-          <p>• Fully inspectable open-source code under the <strong>MIT License</strong>.</p>
+        <div class="p-6 rounded-2xl glass border-cyan-500/20 space-y-2.5 text-sm text-slate-300 leading-relaxed">
+          <h3 class="text-base font-bold text-white">OS Keychain Vault &amp; SSH TOFU</h3>
+          <p>• Inventory encrypted locally with <strong>AES-256-GCM</strong> using a 256-bit key stored in your <strong>OS Keychain</strong>.</p>
+          <p>• Passwords &amp; private keys are <strong>write-only</strong> in the UI—never echoed back to the frontend.</p>
+          <p>• SSH host keys verified via <code class="text-cyan-300">known_hosts</code> / TOFU to protect against MITM attacks.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl glass border-indigo-500/20 space-y-2.5 text-sm text-slate-300 leading-relaxed">
+          <h3 class="text-base font-bold text-white">Safe SFTP &amp; CI-Verified Builds</h3>
+          <p>• <strong>Atomic SFTP writes</strong> prevent half-written configs on drops; critical system paths (<code class="text-indigo-300">/etc</code>, <code class="text-indigo-300">/boot</code>, <code class="text-indigo-300">/usr</code>) are protected from deletion.</p>
+          <p>• Built on the latest patched Go toolchain verified by <code class="text-indigo-300">go vet</code>, <code class="text-indigo-300">govulncheck</code>, and <code class="text-indigo-300">npm audit</code>.</p>
+          <p>• Every release includes <code class="text-indigo-300">SHA256SUMS.txt</code> for cryptographic verification.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Downloads -->
+  <!-- Downloads (All 17 v0.3.0 Release Assets) -->
   <section id="downloads" class="py-16 border-t border-slate-800/70 bg-[#080d18]/75">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-      <div class="space-y-1.5">
-        <span class="text-xs font-mono uppercase tracking-wider text-cyan-400">Release v0.2.0</span>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Installers &amp; Portable Builds</h2>
-        <p class="text-sm text-slate-400">
-          Published via GitHub Actions with SHA-256 checksums on the <a href="https://github.com/CyberRhythm/ZentraDeck/releases/tag/v0.2.0" target="_blank" rel="noopener" class="text-cyan-300 hover:underline">v0.2.0 Release page</a>.
-        </p>
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div class="space-y-1.5">
+          <span class="text-xs font-mono uppercase tracking-wider text-cyan-400">Release v0.3.0 • 17 Assets</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Native Installers &amp; Portable Builds</h2>
+          <p class="text-sm text-slate-400">
+            Audited &amp; built automatically via GitHub Actions on the <a href="https://github.com/CyberRhythm/ZentraDeck/releases/tag/v0.3.0" target="_blank" rel="noopener" class="text-cyan-300 hover:underline">v0.3.0 Release page</a>.
+          </p>
+        </div>
+        <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/SHA256SUMS.txt" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass border-emerald-500/30 hover:border-emerald-400/60 text-xs font-mono font-semibold text-emerald-300 transition shrink-0">
+          SHA256SUMS.txt ↗
+        </a>
       </div>
 
       <div class="grid md:grid-cols-3 gap-5">
+        <!-- Windows Card -->
         <div class="p-6 rounded-2xl glass glass-card transition duration-200 flex flex-col justify-between space-y-4">
           <div class="space-y-1.5">
-            <div class="text-xs font-mono text-cyan-300">WINDOWS (X64 &amp; ARM64)</div>
+            <div class="text-xs font-mono text-cyan-300">WINDOWS (AMD64 &amp; ARM64)</div>
             <h3 class="text-lg font-bold text-white">Windows 10 / 11</h3>
             <p class="text-xs text-slate-400 leading-relaxed">
-              NSIS installers and portable zips. On unsigned open-source builds, Windows SmartScreen may ask to click <em>More info → Run anyway</em>.
+              NSIS installers and portable zips (~6–8 MB). On unsigned open-source builds, Windows SmartScreen may ask to click <em>More info → Run anyway</em>.
             </p>
           </div>
           <div class="space-y-2 text-xs font-semibold">
-            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-windows-amd64-installer.exe" class="block text-center py-2.5 px-3 rounded-xl bg-cyan-400/15 hover:bg-cyan-400/25 text-cyan-300 border border-cyan-400/30 transition">x64 Installer (.exe)</a>
-            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-windows-amd64-portable.zip" class="block text-center py-2 px-3 rounded-xl glass hover:border-slate-600 text-slate-200 transition">x64 Portable (.zip)</a>
+            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-windows-amd64-installer.exe" class="block text-center py-2.5 px-3 rounded-xl bg-cyan-400/15 hover:bg-cyan-400/25 text-cyan-300 border border-cyan-400/30 transition">x64 Installer (.exe)</a>
+            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-windows-amd64-portable.zip" class="block text-center py-2 px-3 rounded-xl glass hover:border-slate-600 text-slate-200 transition">x64 Portable (.zip)</a>
             <div class="grid grid-cols-2 gap-2">
-              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-windows-arm64-installer.exe" class="text-center py-2 px-2 rounded-lg glass hover:border-slate-600 text-slate-300 transition">ARM64 .exe</a>
-              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-windows-arm64-portable.zip" class="text-center py-2 px-2 rounded-lg glass hover:border-slate-600 text-slate-300 transition">ARM64 .zip</a>
+              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-windows-arm64-installer.exe" class="text-center py-2 px-2 rounded-lg glass hover:border-slate-600 text-slate-300 transition">ARM64 .exe</a>
+              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-windows-arm64-portable.zip" class="text-center py-2 px-2 rounded-lg glass hover:border-slate-600 text-slate-300 transition">ARM64 .zip</a>
             </div>
           </div>
         </div>
 
+        <!-- macOS Card -->
         <div class="p-6 rounded-2xl glass glass-card transition duration-200 flex flex-col justify-between space-y-4">
           <div class="space-y-1.5">
             <div class="text-xs font-mono text-indigo-300">MACOS UNIVERSAL</div>
-            <h3 class="text-lg font-bold text-white">Intel &amp; Apple Silicon</h3>
+            <h3 class="text-lg font-bold text-white">Apple Silicon &amp; Intel</h3>
             <p class="text-xs text-slate-400 leading-relaxed">
-              Universal build for Intel and M-series Macs. If blocked by Gatekeeper, right-click → <em>Open</em> or run <code class="text-slate-300">xattr -cr /Applications/ZentraDeck.app</code>.
+              Single universal build (~11–12 MB) for M-series and Intel Macs. If blocked by Gatekeeper, right-click → <em>Open</em> or run <code class="text-slate-300">xattr -cr /Applications/ZentraDeck.app</code>.
             </p>
           </div>
           <div class="space-y-2 text-xs font-semibold">
-            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-macos-universal-installer.dmg" class="block text-center py-2.5 px-3 rounded-xl bg-indigo-400/15 hover:bg-indigo-400/25 text-indigo-300 border border-indigo-400/30 transition">Universal Installer (.dmg)</a>
-            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-macos-universal-portable.zip" class="block text-center py-2 px-3 rounded-xl glass hover:border-slate-600 text-slate-200 transition">Universal Portable (.zip)</a>
+            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-macos-universal-installer.dmg" class="block text-center py-2.5 px-3 rounded-xl bg-indigo-400/15 hover:bg-indigo-400/25 text-indigo-300 border border-indigo-400/30 transition">Universal Installer (.dmg)</a>
+            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-macos-universal-portable.zip" class="block text-center py-2 px-3 rounded-xl glass hover:border-slate-600 text-slate-200 transition">Universal Portable (.zip)</a>
           </div>
         </div>
 
+        <!-- Linux Card (All Major Distros) -->
         <div class="p-6 rounded-2xl glass glass-card transition duration-200 flex flex-col justify-between space-y-4">
           <div class="space-y-1.5">
-            <div class="text-xs font-mono text-emerald-300">LINUX (AMD64 &amp; ARM64)</div>
-            <h3 class="text-lg font-bold text-white">Debian / Ubuntu &amp; Tarballs</h3>
+            <div class="text-xs font-mono text-emerald-300">LINUX (ALL DISTROS • AMD64 &amp; ARM64)</div>
+            <h3 class="text-lg font-bold text-white">AppImage, Debian, RPM &amp; Arch</h3>
             <p class="text-xs text-slate-400 leading-relaxed">
-              <code class="text-slate-300">.deb</code> packages with desktop launcher and icon plus portable <code class="text-slate-300">.tar.gz</code> archives for <code class="text-slate-300">amd64</code> and <code class="text-slate-300">arm64</code>.
+              Native packages (~5–8 MB) for Ubuntu/Debian (<code class="text-slate-300">.deb</code>), Fedora/RHEL/openSUSE (<code class="text-slate-300">.rpm</code>), Arch/Manjaro (<code class="text-slate-300">.pkg.tar.zst</code>), plus universal <code class="text-slate-300">.AppImage</code> &amp; <code class="text-slate-300">.tar.gz</code>.
             </p>
           </div>
           <div class="space-y-2 text-xs font-semibold">
-            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-linux-amd64-installer.deb" class="block text-center py-2.5 px-3 rounded-xl bg-emerald-400/15 hover:bg-emerald-400/25 text-emerald-300 border border-emerald-400/30 transition">amd64 Installer (.deb)</a>
-            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-linux-amd64-portable.tar.gz" class="block text-center py-2 px-3 rounded-xl glass hover:border-slate-600 text-slate-200 transition">amd64 Portable (.tar.gz)</a>
-            <div class="grid grid-cols-2 gap-2">
-              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-linux-arm64-installer.deb" class="text-center py-2 px-2 rounded-lg glass hover:border-slate-600 text-slate-300 transition">arm64 .deb</a>
-              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-linux-arm64-portable.tar.gz" class="text-center py-2 px-2 rounded-lg glass hover:border-slate-600 text-slate-300 transition">arm64 .tar.gz</a>
+            <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-amd64.AppImage" class="block text-center py-2.5 px-3 rounded-xl bg-emerald-400/15 hover:bg-emerald-400/25 text-emerald-300 border border-emerald-400/30 transition">amd64 Universal (.AppImage)</a>
+            <div class="grid grid-cols-2 gap-1.5">
+              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-amd64.deb" class="text-center py-1.5 px-2 rounded-lg glass hover:border-slate-600 text-slate-200 transition">amd64 .deb</a>
+              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-amd64.rpm" class="text-center py-1.5 px-2 rounded-lg glass hover:border-slate-600 text-slate-200 transition">amd64 .rpm</a>
+              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-amd64.pkg.tar.zst" class="text-center py-1.5 px-2 rounded-lg glass hover:border-slate-600 text-slate-200 transition">amd64 Arch</a>
+              <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-amd64-portable.tar.gz" class="text-center py-1.5 px-2 rounded-lg glass hover:border-slate-600 text-slate-200 transition">amd64 .tar.gz</a>
+            </div>
+            <div class="pt-1 border-t border-slate-800/80">
+              <div class="text-[10px] font-mono text-slate-400 mb-1.5">ARM64 BUILDS</div>
+              <div class="grid grid-cols-3 gap-1.5 text-[11px]">
+                <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-arm64.AppImage" class="text-center py-1.5 px-1.5 rounded-lg glass hover:border-slate-600 text-slate-300 transition">AppImage</a>
+                <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-arm64.deb" class="text-center py-1.5 px-1.5 rounded-lg glass hover:border-slate-600 text-slate-300 transition">.deb</a>
+                <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-arm64.rpm" class="text-center py-1.5 px-1.5 rounded-lg glass hover:border-slate-600 text-slate-300 transition">.rpm</a>
+                <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-arm64.pkg.tar.zst" class="text-center py-1.5 px-1.5 rounded-lg glass hover:border-slate-600 text-slate-300 transition col-span-2">Arch (.pkg.tar.zst)</a>
+                <a href="https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-arm64-portable.tar.gz" class="text-center py-1.5 px-1.5 rounded-lg glass hover:border-slate-600 text-slate-300 transition">.tar.gz</a>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Checksum Verification Bar -->
+      <div class="rounded-2xl glass p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="text-xs text-slate-300">
+          <span class="font-bold text-emerald-300">Verify Integrity:</span> Check any downloaded package against the signed release checksums:
+        </div>
+        <code class="text-xs text-cyan-200 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-lg overflow-x-auto">sha256sum -c SHA256SUMS.txt --ignore-missing</code>
       </div>
     </div>
   </section>
@@ -405,7 +492,10 @@
   <!-- Build from Source -->
   <section id="build" class="py-14 border-t border-slate-800/70">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 space-y-4">
-      <h2 class="text-xl font-extrabold text-white">Build from source</h2>
+      <div class="space-y-1">
+        <h2 class="text-xl font-extrabold text-white">Build from source</h2>
+        <p class="text-xs text-slate-400">100% auditable Go + Wails + React/TypeScript source code. On Linux with WebKit2GTK 4.1, append <code class="text-cyan-300">-tags webkit2_41</code>.</p>
+      </div>
       <div class="rounded-2xl glass p-4 overflow-x-auto">
         <pre class="text-xs sm:text-sm text-cyan-200 leading-relaxed"><code>git clone https://github.com/CyberRhythm/ZentraDeck.git
 cd ZentraDeck
@@ -436,11 +526,11 @@ wails build -clean</code></pre>
       },
       fleet: {
         src: './screenshots/fleet.png',
-        caption: 'Fleet Overview — multi-server status, latency & resource usage'
+        caption: 'Fleet Overview — multi-server status, latency & live resource bars'
       },
       terminal: {
         src: './screenshots/terminal.png',
-        caption: 'Live Streaming Terminal — quick presets & instant output'
+        caption: 'Interactive PTY Terminal & Quick Commands — full TUI support & instant streaming'
       }
     };
 
@@ -468,14 +558,14 @@ wails build -clean</code></pre>
       if (!btn || !label) return;
 
       if (plat.includes('mac') || ua.includes('mac os')) {
-        btn.href = 'https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-macos-universal-installer.dmg';
-        label.textContent = 'Download for macOS (.dmg)';
+        btn.href = 'https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-macos-universal-installer.dmg';
+        label.textContent = 'Download v0.3.0 for macOS (.dmg)';
       } else if (plat.includes('linux') || ua.includes('linux')) {
-        btn.href = 'https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-linux-amd64-installer.deb';
-        label.textContent = 'Download for Linux (.deb)';
+        btn.href = 'https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-linux-amd64.AppImage';
+        label.textContent = 'Download v0.3.0 for Linux (.AppImage)';
       } else {
-        btn.href = 'https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.2.0/ZentraDeck-windows-amd64-installer.exe';
-        label.textContent = 'Download for Windows x64 (.exe)';
+        btn.href = 'https://github.com/CyberRhythm/ZentraDeck/releases/download/v0.3.0/ZentraDeck-windows-amd64-installer.exe';
+        label.textContent = 'Download v0.3.0 for Windows (.exe)';
       }
     })();
   </script>
