@@ -237,7 +237,7 @@ jobs:
           export PKG_VER="$VER"
           export BIN_PATH="$BIN_PATH"
 
-          cat <<'EOF' > pkg_stage/nfpm.yaml
+          cat <<EOF > pkg_stage/nfpm.yaml
           name: "zentradeck"
           arch: "${PKG_ARCH}"
           platform: "linux"

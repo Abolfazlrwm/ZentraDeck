@@ -1,6 +1,5 @@
 # Build outputs
 build/bin/
-build/windows/icon.ico
 build/darwin/iconfile.icns
 *.exe
 *.dll
