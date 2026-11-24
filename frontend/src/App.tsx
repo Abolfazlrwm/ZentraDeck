@@ -91,6 +91,8 @@ import { main } from '../wailsjs/go/models';
 import { BrowserOpenURL, EventsOn } from '../wailsjs/runtime/runtime';
 import { LANGUAGES, LanguageCode, translations } from './i18n';
 import { getAlertStrings } from './alertI18n';
+import PtyTerminal, { type PtyContainerTarget } from './PtyTerminal';
+import { getPtyStrings } from './ptyI18n';
 import { HELP_TOOLTIPS } from './helpTooltips';
 import { DONATION_WALLETS } from './wallets';
 
@@ -293,6 +295,9 @@ export default function App() {
   const [demoMode, setDemoMode] = useState<boolean>(false);
   const [viewPage, setViewPage] = useState<'server' | 'fleet'>('server');
   const [activeTab, setActiveTab] = useState<ServerTab>('overview');
+  const [termMode, setTermMode] = useState<'pty' | 'quick'>('pty');
+  const [ptyContainer, setPtyContainer] = useState<PtyContainerTarget | null>(null);
+  const [ptyMounted, setPtyMounted] = useState(false);
   const [selectedId, setSelectedId] = useState<string>('');
 
   const [metricsMap, setMetricsMap] = useState<Record<string, main.ServerMetrics>>({});
@@ -727,6 +732,26 @@ export default function App() {
     } finally {
       setBusyAction(null);
     }
+  };
+
+  useEffect(() => {
+    setPtyContainer(null);
+    setPtyMounted(false);
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (activeTab === 'terminal' && isPro) {
+      setPtyMounted(true);
+    }
+  }, [activeTab, isPro]);
+
+  const handleOpenDockerShell = (target: PtyContainerTarget) => {
+    if (!isPro) {
+      updateSettings({ viewMode: 'pro' });
+    }
+    setPtyContainer(target);
+    setTermMode('pty');
+    setActiveTab('terminal');
   };
 
   const handleDockerAction = async (containerId: string, action: 'start' | 'stop' | 'restart') => {
@@ -2275,6 +2300,15 @@ export default function App() {
                                   {t.stop}
                                 </button>
                               )}
+                              {isRunning && (
+                                <button
+                                  onClick={() => handleOpenDockerShell({ id: c.id, name: c.name })}
+                                  className="flex items-center gap-1 rounded-lg border border-indigo-400/30 bg-indigo-500/15 px-2.5 py-1 text-[11px] font-semibold text-indigo-200 transition hover:bg-indigo-500/30"
+                                >
+                                  <Terminal className="h-3 w-3" />
+                                  {getPtyStrings(settings.language).shellBtn}
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleOpenLogs('docker', c.id, c.name)}
                                 className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-slate-300 transition hover:bg-white/15 hover:text-white"
@@ -2505,36 +2539,80 @@ export default function App() {
               )}
 
               {/* TAB 6: QUICK TERMINAL (PRO) */}
-              {activeTab === 'terminal' && isPro && (
-                <div className="flex flex-col rounded-2xl border border-white/10 bg-slate-900/60 p-4 backdrop-blur-xl">
+              {isPro && (activeTab === 'terminal' || ptyMounted) && (
+                <div
+                  className={`${
+                    activeTab === 'terminal' ? 'flex' : 'hidden'
+                  } flex-col rounded-2xl border border-white/10 bg-slate-900/85 p-4`}
+                >
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Terminal className="h-4 w-4 text-emerald-400" />
-                      <h3 className="flex items-center gap-2 text-sm font-semibold text-white">{t.quickTerminal}<HelpTip text={h.terminal} /></h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {cmdRunning && (
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <div className="flex items-center gap-2">
+                        <Terminal className="h-4 w-4 text-emerald-400" />
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-white">{t.quickTerminal}<HelpTip text={h.terminal} /></h3>
+                      </div>
+                      <div className="inline-flex rounded-xl border border-white/10 bg-slate-950/70 p-0.5 text-[11px]">
                         <button
-                          onClick={handleStopCommand}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/35 bg-rose-500/15 px-3 py-1 text-[11px] font-semibold text-rose-200 transition hover:bg-rose-500/30"
+                          type="button"
+                          onClick={() => setTermMode('pty')}
+                          className={`rounded-lg px-2.5 py-1 font-semibold transition ${
+                            termMode === 'pty'
+                              ? 'bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/35'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
                         >
-                          <Square className="h-3 w-3 fill-rose-300" />
-                          {t.stopCmd}
+                          {getPtyStrings(settings.language).interactivePty}
                         </button>
-                      )}
-                      {currentTerminal.length > 0 && selectedServer && (
                         <button
-                          onClick={() =>
-                            setTerminalMap((prev) => ({ ...prev, [selectedServer.id]: [] }))
-                          }
-                          className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300 hover:bg-white/10"
+                          type="button"
+                          onClick={() => setTermMode('quick')}
+                          className={`rounded-lg px-2.5 py-1 font-semibold transition ${
+                            termMode === 'quick'
+                              ? 'bg-indigo-500/25 text-indigo-200 ring-1 ring-indigo-400/35'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
                         >
-                          {t.clearOutput}
+                          {getPtyStrings(settings.language).quickRunner}
                         </button>
-                      )}
+                      </div>
                     </div>
+                    {termMode === 'quick' && (
+                      <div className="flex items-center gap-2">
+                        {cmdRunning && (
+                          <button
+                            onClick={handleStopCommand}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/35 bg-rose-500/15 px-3 py-1 text-[11px] font-semibold text-rose-200 transition hover:bg-rose-500/30"
+                          >
+                            <Square className="h-3 w-3 fill-rose-300" />
+                            {t.stopCmd}
+                          </button>
+                        )}
+                        {currentTerminal.length > 0 && selectedServer && (
+                          <button
+                            onClick={() =>
+                              setTerminalMap((prev) => ({ ...prev, [selectedServer.id]: [] }))
+                            }
+                            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300 hover:bg-white/10"
+                          >
+                            {t.clearOutput}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
+                  {termMode === 'pty' && selectedServer ? (
+                    <PtyTerminal
+                      serverId={selectedServer.id}
+                      serverName={selectedServer.name}
+                      username={selectedServer.username}
+                      language={settings.language}
+                      containerTarget={ptyContainer}
+                      isVisible={activeTab === 'terminal' && termMode === 'pty'}
+                      onExitContainer={() => setPtyContainer(null)}
+                    />
+                  ) : (
+                    <>
                   {/* Categorized Command Presets */}
                   <div className="mb-3 rounded-xl border border-white/10 bg-slate-950/55 p-2.5">
                     <div className="mb-2 flex flex-wrap gap-1.5 border-b border-white/5 pb-2">
@@ -2665,6 +2743,8 @@ export default function App() {
                       </button>
                     )}
                   </form>
+                    </>
+                  )}
                 </div>
               )}
             </div>

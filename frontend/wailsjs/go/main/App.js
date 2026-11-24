@@ -6,6 +6,10 @@ export function CancelQuickCommand(arg1) {
   return window['go']['main']['App']['CancelQuickCommand'](arg1);
 }
 
+export function ClosePTY(arg1) {
+  return window['go']['main']['App']['ClosePTY'](arg1);
+}
+
 export function ControlDocker(arg1, arg2, arg3) {
   return window['go']['main']['App']['ControlDocker'](arg1, arg2, arg3);
 }
@@ -62,6 +66,10 @@ export function RebootServer(arg1) {
   return window['go']['main']['App']['RebootServer'](arg1);
 }
 
+export function ResizePTY(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ResizePTY'](arg1, arg2, arg3);
+}
+
 export function RunQuickCommand(arg1, arg2) {
   return window['go']['main']['App']['RunQuickCommand'](arg1, arg2);
 }
@@ -82,6 +90,10 @@ export function SendTestNotification() {
   return window['go']['main']['App']['SendTestNotification']();
 }
 
+export function StartPTY(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['StartPTY'](arg1, arg2, arg3, arg4);
+}
+
 export function StartQuickCommand(arg1, arg2, arg3) {
   return window['go']['main']['App']['StartQuickCommand'](arg1, arg2, arg3);
 }
@@ -96,4 +108,8 @@ export function ToggleDemoOutage(arg1) {
 
 export function UpdateTraySummary(arg1, arg2) {
   return window['go']['main']['App']['UpdateTraySummary'](arg1, arg2);
+}
+
+export function WritePTY(arg1, arg2) {
+  return window['go']['main']['App']['WritePTY'](arg1, arg2);
 }

@@ -138,6 +138,22 @@ export namespace main {
 	        this.process = source["process"];
 	    }
 	}
+	export class PTYStartResult {
+	    success: boolean;
+	    sessionId: string;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PTYStartResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.sessionId = source["sessionId"];
+	        this.error = source["error"];
+	    }
+	}
 	export class ProcessInfo {
 	    pid: number;
 	    user: string;

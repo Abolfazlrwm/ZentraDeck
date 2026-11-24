@@ -191,6 +191,8 @@ type App struct {
 	prevNet      map[string]netSample
 	demoStates   map[string]*demoState
 	activeTerm   map[string]*activeTermRun
+	ptyMu        sync.Mutex
+	ptySessions  map[string]*ptySession
 	alertMu      sync.Mutex
 	alertStates  map[string]*serverAlertState
 	demoRules    map[string]AlertRules
@@ -231,6 +233,7 @@ func NewApp() *App {
 		prevNet:     make(map[string]netSample),
 		demoStates:  make(map[string]*demoState),
 		activeTerm:  make(map[string]*activeTermRun),
+		ptySessions: make(map[string]*ptySession),
 		alertStates: make(map[string]*serverAlertState),
 		demoRules:   make(map[string]AlertRules),
 		trayStopCh:  make(chan struct{}),

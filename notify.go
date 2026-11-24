@@ -125,6 +125,7 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 }
 
 func (a *App) shutdown(ctx context.Context) {
+	a.closeAllPTY()
 	a.stopTray()
 }
 
