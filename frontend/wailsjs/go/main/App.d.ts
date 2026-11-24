@@ -4,11 +4,15 @@ import {main} from '../models';
 
 export function CancelQuickCommand(arg1:string):Promise<main.ActionResult>;
 
+export function ClosePTY(arg1:string):Promise<void>;
+
 export function ControlDocker(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
 export function ControlService(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
 export function DeleteServer(arg1:string):Promise<void>;
+
+export function EvaluateServerAlerts(arg1:string,arg2:string,arg3:boolean,arg4:main.ServerMetrics):Promise<Array<main.TriggeredAlert>>;
 
 export function GetDemoServers():Promise<Array<main.ServerConfig>>;
 
@@ -26,9 +30,31 @@ export function ImportSSHConfig():Promise<number>;
 
 export function KillProcess(arg1:string,arg2:number,arg3:boolean):Promise<main.ActionResult>;
 
+export function QuitApp():Promise<void>;
+
 export function RebootServer(arg1:string):Promise<main.ActionResult>;
 
+export function ResizePTY(arg1:string,arg2:number,arg3:number):Promise<void>;
+
 export function RunQuickCommand(arg1:string,arg2:string):Promise<main.CommandOutput>;
+
+export function SFTPDelete(arg1:string,arg2:string):Promise<main.ActionResult>;
+
+export function SFTPDownloadFile(arg1:string,arg2:string):Promise<main.ActionResult>;
+
+export function SFTPListDir(arg1:string,arg2:string):Promise<main.DirListResult>;
+
+export function SFTPMkdir(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
+
+export function SFTPNewFile(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
+
+export function SFTPReadFile(arg1:string,arg2:string):Promise<main.FileContentResult>;
+
+export function SFTPRename(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
+
+export function SFTPUploadFile(arg1:string,arg2:string):Promise<main.ActionResult>;
+
+export function SFTPWriteFile(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
 export function SaveServer(arg1:main.ServerConfig):Promise<main.ServerConfig>;
 
@@ -36,8 +62,16 @@ export function SaveSettings(arg1:main.AppSettings):Promise<main.AppSettings>;
 
 export function SelectKeyFile():Promise<string>;
 
+export function SendTestNotification():Promise<main.ActionResult>;
+
+export function StartPTY(arg1:string,arg2:string,arg3:number,arg4:number):Promise<main.PTYStartResult>;
+
 export function StartQuickCommand(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
 export function TestConnection(arg1:main.ServerConfig):Promise<main.ActionResult>;
 
 export function ToggleDemoOutage(arg1:string):Promise<boolean>;
+
+export function UpdateTraySummary(arg1:number,arg2:number):Promise<void>;
+
+export function WritePTY(arg1:string,arg2:string):Promise<void>;

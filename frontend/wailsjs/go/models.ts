@@ -14,11 +14,40 @@ export namespace main {
 	        this.message = source["message"];
 	    }
 	}
+	export class AlertRules {
+	    configured: boolean;
+	    muted: boolean;
+	    onOutage: boolean;
+	    onFailedSvc: boolean;
+	    cpuThreshold: number;
+	    ramThreshold: number;
+	    diskThreshold: number;
+	    cooldownMin: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new AlertRules(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.configured = source["configured"];
+	        this.muted = source["muted"];
+	        this.onOutage = source["onOutage"];
+	        this.onFailedSvc = source["onFailedSvc"];
+	        this.cpuThreshold = source["cpuThreshold"];
+	        this.ramThreshold = source["ramThreshold"];
+	        this.diskThreshold = source["diskThreshold"];
+	        this.cooldownMin = source["cooldownMin"];
+	    }
+	}
 	export class AppSettings {
 	    language: string;
 	    viewMode: string;
 	    privacyMode: boolean;
 	    pollIntervalSec: number;
+	    desktopAlerts: boolean;
+	    minimizeToTray: boolean;
+	    alertPrefsInit: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppSettings(source);
@@ -30,6 +59,9 @@ export namespace main {
 	        this.viewMode = source["viewMode"];
 	        this.privacyMode = source["privacyMode"];
 	        this.pollIntervalSec = source["pollIntervalSec"];
+	        this.desktopAlerts = source["desktopAlerts"];
+	        this.minimizeToTray = source["minimizeToTray"];
+	        this.alertPrefsInit = source["alertPrefsInit"];
 	    }
 	}
 	export class CommandOutput {
@@ -47,6 +79,68 @@ export namespace main {
 	        this.output = source["output"];
 	        this.durationMs = source["durationMs"];
 	    }
+	}
+	export class FileEntry {
+	    name: string;
+	    path: string;
+	    isDir: boolean;
+	    isSymlink: boolean;
+	    size: number;
+	    mode: string;
+	    modTime: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new FileEntry(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.path = source["path"];
+	        this.isDir = source["isDir"];
+	        this.isSymlink = source["isSymlink"];
+	        this.size = source["size"];
+	        this.mode = source["mode"];
+	        this.modTime = source["modTime"];
+	    }
+	}
+	export class DirListResult {
+	    success: boolean;
+	    path: string;
+	    parent: string;
+	    entries: FileEntry[];
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DirListResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.path = source["path"];
+	        this.parent = source["parent"];
+	        this.entries = this.convertValues(source["entries"], FileEntry);
+	        this.error = source["error"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class DiskMetric {
 	    mount: string;
@@ -88,6 +182,27 @@ export namespace main {
 	        this.ports = source["ports"];
 	    }
 	}
+	export class FileContentResult {
+	    success: boolean;
+	    path: string;
+	    content: string;
+	    size: number;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new FileContentResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.path = source["path"];
+	        this.content = source["content"];
+	        this.size = source["size"];
+	        this.error = source["error"];
+	    }
+	}
+	
 	export class OpenPort {
 	    proto: string;
 	    address: string;
@@ -104,6 +219,22 @@ export namespace main {
 	        this.address = source["address"];
 	        this.port = source["port"];
 	        this.process = source["process"];
+	    }
+	}
+	export class PTYStartResult {
+	    success: boolean;
+	    sessionId: string;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PTYStartResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.sessionId = source["sessionId"];
+	        this.error = source["error"];
 	    }
 	}
 	export class ProcessInfo {
@@ -146,6 +277,7 @@ export namespace main {
 	    hasPassword: boolean;
 	    hasPrivateKey: boolean;
 	    hasProxyPass: boolean;
+	    alertRules: AlertRules;
 	
 	    static createFrom(source: any = {}) {
 	        return new ServerConfig(source);
@@ -172,7 +304,26 @@ export namespace main {
 	        this.hasPassword = source["hasPassword"];
 	        this.hasPrivateKey = source["hasPrivateKey"];
 	        this.hasProxyPass = source["hasProxyPass"];
+	        this.alertRules = this.convertValues(source["alertRules"], AlertRules);
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class ServiceInfo {
 	    name: string;
@@ -289,6 +440,29 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	
+	export class TriggeredAlert {
+	    id: string;
+	    serverId: string;
+	    serverName: string;
+	    type: string;
+	    detail: string;
+	    time: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new TriggeredAlert(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.serverId = source["serverId"];
+	        this.serverName = source["serverName"];
+	        this.type = source["type"];
+	        this.detail = source["detail"];
+	        this.time = source["time"];
+	    }
 	}
 
 }

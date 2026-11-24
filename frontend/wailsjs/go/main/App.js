@@ -6,6 +6,10 @@ export function CancelQuickCommand(arg1) {
   return window['go']['main']['App']['CancelQuickCommand'](arg1);
 }
 
+export function ClosePTY(arg1) {
+  return window['go']['main']['App']['ClosePTY'](arg1);
+}
+
 export function ControlDocker(arg1, arg2, arg3) {
   return window['go']['main']['App']['ControlDocker'](arg1, arg2, arg3);
 }
@@ -16,6 +20,10 @@ export function ControlService(arg1, arg2, arg3) {
 
 export function DeleteServer(arg1) {
   return window['go']['main']['App']['DeleteServer'](arg1);
+}
+
+export function EvaluateServerAlerts(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['EvaluateServerAlerts'](arg1, arg2, arg3, arg4);
 }
 
 export function GetDemoServers() {
@@ -50,12 +58,56 @@ export function KillProcess(arg1, arg2, arg3) {
   return window['go']['main']['App']['KillProcess'](arg1, arg2, arg3);
 }
 
+export function QuitApp() {
+  return window['go']['main']['App']['QuitApp']();
+}
+
 export function RebootServer(arg1) {
   return window['go']['main']['App']['RebootServer'](arg1);
 }
 
+export function ResizePTY(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ResizePTY'](arg1, arg2, arg3);
+}
+
 export function RunQuickCommand(arg1, arg2) {
   return window['go']['main']['App']['RunQuickCommand'](arg1, arg2);
+}
+
+export function SFTPDelete(arg1, arg2) {
+  return window['go']['main']['App']['SFTPDelete'](arg1, arg2);
+}
+
+export function SFTPDownloadFile(arg1, arg2) {
+  return window['go']['main']['App']['SFTPDownloadFile'](arg1, arg2);
+}
+
+export function SFTPListDir(arg1, arg2) {
+  return window['go']['main']['App']['SFTPListDir'](arg1, arg2);
+}
+
+export function SFTPMkdir(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPMkdir'](arg1, arg2, arg3);
+}
+
+export function SFTPNewFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPNewFile'](arg1, arg2, arg3);
+}
+
+export function SFTPReadFile(arg1, arg2) {
+  return window['go']['main']['App']['SFTPReadFile'](arg1, arg2);
+}
+
+export function SFTPRename(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPRename'](arg1, arg2, arg3);
+}
+
+export function SFTPUploadFile(arg1, arg2) {
+  return window['go']['main']['App']['SFTPUploadFile'](arg1, arg2);
+}
+
+export function SFTPWriteFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPWriteFile'](arg1, arg2, arg3);
 }
 
 export function SaveServer(arg1) {
@@ -70,6 +122,14 @@ export function SelectKeyFile() {
   return window['go']['main']['App']['SelectKeyFile']();
 }
 
+export function SendTestNotification() {
+  return window['go']['main']['App']['SendTestNotification']();
+}
+
+export function StartPTY(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['StartPTY'](arg1, arg2, arg3, arg4);
+}
+
 export function StartQuickCommand(arg1, arg2, arg3) {
   return window['go']['main']['App']['StartQuickCommand'](arg1, arg2, arg3);
 }
@@ -80,4 +140,12 @@ export function TestConnection(arg1) {
 
 export function ToggleDemoOutage(arg1) {
   return window['go']['main']['App']['ToggleDemoOutage'](arg1);
+}
+
+export function UpdateTraySummary(arg1, arg2) {
+  return window['go']['main']['App']['UpdateTraySummary'](arg1, arg2);
+}
+
+export function WritePTY(arg1, arg2) {
+  return window['go']['main']['App']['WritePTY'](arg1, arg2);
 }
