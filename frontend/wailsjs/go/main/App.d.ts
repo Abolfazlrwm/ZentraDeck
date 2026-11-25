@@ -4,6 +4,8 @@ import {main} from '../models';
 
 export function CancelQuickCommand(arg1:string):Promise<main.ActionResult>;
 
+export function CheckSysstatPreflight(arg1:string):Promise<main.SysstatPreflightResult>;
+
 export function ClosePTY(arg1:string):Promise<void>;
 
 export function ControlDocker(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
@@ -12,11 +14,17 @@ export function ControlService(arg1:string,arg2:string,arg3:string):Promise<main
 
 export function DeleteServer(arg1:string):Promise<void>;
 
+export function EnableSysstat(arg1:string):Promise<main.ActionResult>;
+
 export function EvaluateServerAlerts(arg1:string,arg2:string,arg3:boolean,arg4:main.ServerMetrics):Promise<Array<main.TriggeredAlert>>;
 
 export function GetDemoServers():Promise<Array<main.ServerConfig>>;
 
 export function GetDockerLogs(arg1:string,arg2:string):Promise<string>;
+
+export function GetReportExportInfo():Promise<main.ReportExportInfo>;
+
+export function GetServerHistory(arg1:string,arg2:string):Promise<main.ServerHistoryReport>;
 
 export function GetServerMetrics(arg1:string):Promise<main.ServerMetrics>;
 
@@ -66,6 +74,8 @@ export function SFTPUploadFile(arg1:string,arg2:string):Promise<main.ActionResul
 
 export function SFTPWriteFile(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
+export function SaveHistoryReport(arg1:string,arg2:string,arg3:string,arg4:string):Promise<main.SaveReportResult>;
+
 export function SaveServer(arg1:main.ServerConfig):Promise<main.ServerConfig>;
 
 export function SaveSettings(arg1:main.AppSettings):Promise<main.AppSettings>;
@@ -73,6 +83,8 @@ export function SaveSettings(arg1:main.AppSettings):Promise<main.AppSettings>;
 export function SelectBackupDir():Promise<string>;
 
 export function SelectKeyFile():Promise<string>;
+
+export function SelectReportDir():Promise<string>;
 
 export function SendTestNotification():Promise<main.ActionResult>;
 

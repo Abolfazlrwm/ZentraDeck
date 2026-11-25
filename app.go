@@ -41,6 +41,8 @@ type AppSettings struct {
 	SftpMaxBackups     int    `json:"sftpMaxBackups"`
 	SftpKeepAllBackups bool   `json:"sftpKeepAllBackups"`
 	SftpBackupDir      string `json:"sftpBackupDir"`
+	ReportExportDir    string `json:"reportExportDir"`
+	ReportExportFormat string `json:"reportExportFormat"`
 }
 
 type ServerConfig struct {
@@ -230,6 +232,8 @@ func defaultSettings() AppSettings {
 		SftpMaxBackups:     5,
 		SftpKeepAllBackups: false,
 		SftpBackupDir:      "",
+		ReportExportDir:    "",
+		ReportExportFormat: "md",
 	}
 }
 
@@ -255,6 +259,12 @@ func (a *App) startup(ctx context.Context) {
 	_ = a.loadSettings()
 	_ = a.loadServers()
 	a.initAlertsAndTray()
+}
+
+func (a *App) SelectReportDir() (string, error) {
+	return wailsruntime.OpenDirectoryDialog(a.ctx, wailsruntime.OpenDialogOptions{
+		Title: "Select Server Reports Export Folder",
+	})
 }
 
 func (a *App) SelectBackupDir() (string, error) {
@@ -299,6 +309,10 @@ func (a *App) loadSettings() error {
 		s.SftpMaxBackups = 5
 	}
 	s.SftpBackupDir = strings.TrimSpace(s.SftpBackupDir)
+	s.ReportExportDir = strings.TrimSpace(s.ReportExportDir)
+	if s.ReportExportFormat != "md" && s.ReportExportFormat != "txt" {
+		s.ReportExportFormat = "md"
+	}
 	a.mu.Lock()
 	s.AlertPrefsInit = true
 	a.settings = s
@@ -326,6 +340,10 @@ func (a *App) SaveSettings(s AppSettings) (AppSettings, error) {
 		s.SftpMaxBackups = 5
 	}
 	s.SftpBackupDir = strings.TrimSpace(s.SftpBackupDir)
+	s.ReportExportDir = strings.TrimSpace(s.ReportExportDir)
+	if s.ReportExportFormat != "md" && s.ReportExportFormat != "txt" {
+		s.ReportExportFormat = "md"
+	}
 	a.mu.Lock()
 	s.AlertPrefsInit = true
 	a.settings = s

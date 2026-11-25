@@ -22,7 +22,9 @@ import {
 } from 'lucide-react';
 import {
   QuitApp,
+  GetReportExportInfo,
   SelectBackupDir,
+  SelectReportDir,
   SendTestNotification,
   SFTPClearBackups,
   SFTPGetBackupStats,
@@ -75,12 +77,14 @@ export default function SettingsModal({
     isCustomDir: false,
   });
   const [clearing, setClearing] = useState(false);
+  const [reportInfo, setReportInfo] = useState<{ exportDir: string; isCustomDir: boolean; format: string }>({ exportDir: '', isCustomDir: false, format: 'md' });
   const [customLimitInput, setCustomLimitInput] = useState(String(settings.sftpMaxBackups || 5));
 
   const ts = getSettingsStrings(settings.language || 'en');
   const isRtl = settings.language === 'fa';
 
   const refreshStats = useCallback(() => {
+    GetReportExportInfo().then((ri) => { if (ri) setReportInfo({ exportDir: ri.exportDir || '', isCustomDir: !!ri.isCustomDir, format: ri.format || 'md' }); }).catch(() => {});
     SFTPGetBackupStats()
       .then((st) => {
         if (st) {
@@ -106,7 +110,7 @@ export default function SettingsModal({
       setCustomLimitInput(String(settings.sftpMaxBackups >= 1 ? settings.sftpMaxBackups : 5));
       refreshStats();
     }
-  }, [open, settings.sftpBackupDir, settings.sftpMaxBackups, refreshStats]);
+  }, [open, settings.sftpBackupDir, settings.sftpMaxBackups, settings.reportExportDir, settings.reportExportFormat, refreshStats]);
 
   useEffect(() => {
     if (!open) return;
@@ -129,6 +133,23 @@ export default function SettingsModal({
     } catch (err) {
       onToast('error', String(err));
     }
+  };
+
+  const handleChooseReportDir = async () => {
+    try {
+      const picked = await SelectReportDir();
+      if (picked && picked.trim()) {
+        onUpdateSettings({ reportExportDir: picked.trim() });
+        setTimeout(refreshStats, 150);
+      }
+    } catch (err) {
+      onToast('error', String(err));
+    }
+  };
+
+  const handleResetReportDir = () => {
+    onUpdateSettings({ reportExportDir: '' });
+    setTimeout(refreshStats, 150);
   };
 
   const handleResetBackupDir = () => {
@@ -442,6 +463,58 @@ export default function SettingsModal({
                         />
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Server Reports Export Folder & Format */}
+                <div className="space-y-2.5 rounded-xl border border-indigo-400/20 bg-indigo-500/[0.05] p-3.5">
+                  <div>
+                    <div className="font-semibold text-white">{ts.reportExportDirLabel}</div>
+                    <div className="text-[11px] text-slate-400">{ts.reportExportDirDesc}</div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div
+                      dir="ltr"
+                      title={reportInfo.exportDir}
+                      className="min-w-0 flex-1 truncate rounded-lg border border-white/10 bg-slate-950/75 px-3 py-1.5 font-mono text-[11px] text-indigo-200"
+                    >
+                      {reportInfo.exportDir || '...'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleChooseReportDir}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-400/30 bg-indigo-500/15 px-3 py-1.5 text-[11px] font-semibold text-indigo-200 transition hover:bg-indigo-500/25"
+                    >
+                      <FolderOpen className="h-3.5 w-3.5" />
+                      {ts.sftpChooseFolder}
+                    </button>
+                    {reportInfo.isCustomDir && (
+                      <button
+                        type="button"
+                        onClick={handleResetReportDir}
+                        className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] text-slate-300 transition hover:bg-white/10 hover:text-white"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        {ts.sftpResetDefault}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className="text-[11px] text-slate-400">{ts.reportFormatLabel}</span>
+                    {(['md', 'txt'] as const).map((fmt) => (
+                      <button
+                        key={fmt}
+                        type="button"
+                        onClick={() => onUpdateSettings({ reportExportFormat: fmt })}
+                        className={`rounded-lg border px-3 py-1 font-mono text-[11px] font-semibold uppercase transition ${
+                          (settings.reportExportFormat || 'md') === fmt
+                            ? 'border-indigo-400/50 bg-indigo-500/25 text-white'
+                            : 'border-white/10 bg-slate-950/50 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        .{fmt}
+                      </button>
+                    ))}
                   </div>
                 </div>
 

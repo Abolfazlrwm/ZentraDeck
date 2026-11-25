@@ -18,6 +18,7 @@ import {
   FileDown,
   FolderOpen,
   HardDrive,
+  History,
   Heart,
   KeyRound,
   LayoutGrid,
@@ -95,6 +96,8 @@ import { getAlertStrings } from './alertI18n';
 import { getSftpStrings } from './sftpI18n';
 import SettingsModal, { type SettingsTab } from './SettingsModal';
 import { getSettingsStrings } from './settingsI18n';
+import HistoryPanel from './HistoryPanel';
+import { getHistoryStrings } from './historyI18n';
 import { explainConnectionError, getErrorTechLabel } from './errorExplain';
 import { HELP_TOOLTIPS } from './helpTooltips';
 import { DONATION_WALLETS } from './wallets';
@@ -144,7 +147,7 @@ interface ConfirmDialogState {
   onConfirm: () => void;
 }
 
-type ServerTab = 'overview' | 'processes' | 'docker' | 'services' | 'network' | 'files' | 'terminal';
+type ServerTab = 'overview' | 'history' | 'processes' | 'docker' | 'services' | 'network' | 'files' | 'terminal';
 
 const MAX_HISTORY = 30;
 const DOT = '\u2022';
@@ -999,6 +1002,7 @@ export default function App() {
 
   const navTabs: { id: ServerTab; label: string; icon: React.ReactNode; badge?: number; proOnly?: boolean }[] = [
     { id: 'overview', label: t.tabOverview, icon: <Activity className="h-3.5 w-3.5" /> },
+    { id: 'history', label: getHistoryStrings(settings.language).tabHistory, icon: <History className="h-3.5 w-3.5" /> },
     { id: 'processes', label: t.tabProcesses, icon: <ListTree className="h-3.5 w-3.5" />, badge: processes.length },
     { id: 'docker', label: t.tabDocker, icon: <Box className="h-3.5 w-3.5" />, badge: containers.length },
     {
@@ -1699,6 +1703,18 @@ export default function App() {
               </div>
 
               {/* TAB 1: OVERVIEW */}
+              {activeTab === 'history' && selectedServer && (
+                <HistoryPanel
+                  serverId={selectedServer.id}
+                  serverName={selectedServer.name}
+                  isDemo={!!selectedServer.isDemo}
+                  language={settings.language}
+                  privacyMode={!!settings.privacyMode}
+                  reportFormat={settings.reportExportFormat || 'md'}
+                  onToast={(type, message) => pushToast(type, message)}
+                />
+              )}
+
               {activeTab === 'overview' && (
                 <div className="space-y-5">
                   {/* Health Banner */}

@@ -6,6 +6,10 @@ export function CancelQuickCommand(arg1) {
   return window['go']['main']['App']['CancelQuickCommand'](arg1);
 }
 
+export function CheckSysstatPreflight(arg1) {
+  return window['go']['main']['App']['CheckSysstatPreflight'](arg1);
+}
+
 export function ClosePTY(arg1) {
   return window['go']['main']['App']['ClosePTY'](arg1);
 }
@@ -22,6 +26,10 @@ export function DeleteServer(arg1) {
   return window['go']['main']['App']['DeleteServer'](arg1);
 }
 
+export function EnableSysstat(arg1) {
+  return window['go']['main']['App']['EnableSysstat'](arg1);
+}
+
 export function EvaluateServerAlerts(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['EvaluateServerAlerts'](arg1, arg2, arg3, arg4);
 }
@@ -32,6 +40,14 @@ export function GetDemoServers() {
 
 export function GetDockerLogs(arg1, arg2) {
   return window['go']['main']['App']['GetDockerLogs'](arg1, arg2);
+}
+
+export function GetReportExportInfo() {
+  return window['go']['main']['App']['GetReportExportInfo']();
+}
+
+export function GetServerHistory(arg1, arg2) {
+  return window['go']['main']['App']['GetServerHistory'](arg1, arg2);
 }
 
 export function GetServerMetrics(arg1) {
@@ -130,6 +146,10 @@ export function SFTPWriteFile(arg1, arg2, arg3) {
   return window['go']['main']['App']['SFTPWriteFile'](arg1, arg2, arg3);
 }
 
+export function SaveHistoryReport(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['SaveHistoryReport'](arg1, arg2, arg3, arg4);
+}
+
 export function SaveServer(arg1) {
   return window['go']['main']['App']['SaveServer'](arg1);
 }
@@ -144,6 +164,10 @@ export function SelectBackupDir() {
 
 export function SelectKeyFile() {
   return window['go']['main']['App']['SelectKeyFile']();
+}
+
+export function SelectReportDir() {
+  return window['go']['main']['App']['SelectReportDir']();
 }
 
 export function SendTestNotification() {
