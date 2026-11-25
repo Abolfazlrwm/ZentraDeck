@@ -17,7 +17,6 @@ import {
   EyeOff,
   FileDown,
   FolderOpen,
-  Globe,
   HardDrive,
   Heart,
   KeyRound,
@@ -33,6 +32,7 @@ import {
   Search,
   Send,
   Server,
+  Settings,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -79,9 +79,7 @@ import {
   StartQuickCommand,
   SaveServer,
   EvaluateServerAlerts,
-  SendTestNotification,
   UpdateTraySummary,
-  QuitApp,
   SaveSettings,
   SelectKeyFile,
   TestConnection,
@@ -89,12 +87,15 @@ import {
 } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
 import { BrowserOpenURL, EventsOn } from '../wailsjs/runtime/runtime';
-import { LANGUAGES, LanguageCode, translations } from './i18n';
-import { getAlertStrings } from './alertI18n';
+import { LanguageCode, translations } from './i18n';
 import PtyTerminal, { type PtyContainerTarget } from './PtyTerminal';
 import { getPtyStrings } from './ptyI18n';
 import SftpManager from './SftpManager';
+import { getAlertStrings } from './alertI18n';
 import { getSftpStrings } from './sftpI18n';
+import SettingsModal, { type SettingsTab } from './SettingsModal';
+import { getSettingsStrings } from './settingsI18n';
+import { explainConnectionError, getErrorTechLabel } from './errorExplain';
 import { HELP_TOOLTIPS } from './helpTooltips';
 import { DONATION_WALLETS } from './wallets';
 
@@ -316,7 +317,8 @@ export default function App() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   // Dropdowns & Modals
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [serverModalOpen, setServerModalOpen] = useState(false);
 
@@ -379,6 +381,7 @@ export default function App() {
   const prevOnlineRef = useRef<Record<string, boolean>>({});
   const lang = (settings.language as LanguageCode) in translations ? (settings.language as LanguageCode) : 'en';
   const t = translations[lang];
+  const ta = getAlertStrings(lang);
   const h = HELP_TOOLTIPS[lang] || HELP_TOOLTIPS.en;
   const isPro = settings.viewMode === 'pro';
   const isRtl = lang === 'fa';
@@ -1345,7 +1348,6 @@ export default function App() {
               <button
                 onClick={() => {
                   setAlertsOpen((v) => !v);
-                  setLangMenuOpen(false);
                   setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
                 }}
                 className="relative flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
@@ -1359,7 +1361,6 @@ export default function App() {
               </button>
 
               {alertsOpen && (() => {
-                const ta = getAlertStrings(settings.language);
                 return (
                 <div className="absolute end-0 mt-2 w-80 rounded-2xl border border-white/15 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-xl">
                   <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-2">
@@ -1374,60 +1375,18 @@ export default function App() {
                         </button>
                       )}
                       <button
-                        onClick={() => QuitApp()}
-                        className="rounded-md border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 text-[10px] text-rose-300 transition hover:bg-rose-500/20"
+                        type="button"
+                        onClick={() => {
+                          setAlertsOpen(false);
+                          setSettingsTab('alerts');
+                          setSettingsModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md border border-cyan-400/25 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium text-cyan-200 transition hover:bg-cyan-500/20"
                       >
-                        {ta.quitApp}
+                        <Settings className="h-3 w-3" />
+                        {getSettingsStrings(settings.language).alertSettingsLink}
                       </button>
                     </div>
-                  </div>
-
-                  {/* Global Desktop Alerts & System Tray Controls */}
-                  <div className="mb-2.5 space-y-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-[11px]">
-                    <label className="flex cursor-pointer items-center justify-between gap-2 text-slate-200">
-                      <span>{ta.desktopAlerts}</span>
-                      <input
-                        type="checkbox"
-                        checked={settings.desktopAlerts !== false}
-                        onChange={async (e) => {
-                          const next = main.AppSettings.createFrom({
-                            ...settings,
-                            desktopAlerts: e.target.checked,
-                            alertPrefsInit: true,
-                          });
-                          setSettings(next);
-                          await SaveSettings(next);
-                        }}
-                        className="h-3.5 w-3.5 accent-cyan-400"
-                      />
-                    </label>
-                    <label className="flex cursor-pointer items-center justify-between gap-2 text-slate-200">
-                      <span>{ta.minimizeToTray}</span>
-                      <input
-                        type="checkbox"
-                        checked={settings.minimizeToTray !== false}
-                        onChange={async (e) => {
-                          const next = main.AppSettings.createFrom({
-                            ...settings,
-                            minimizeToTray: e.target.checked,
-                            alertPrefsInit: true,
-                          });
-                          setSettings(next);
-                          await SaveSettings(next);
-                        }}
-                        className="h-3.5 w-3.5 accent-cyan-400"
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const res = await SendTestNotification();
-                        if (!res.success) pushToast('error', res.message);
-                      }}
-                      className="mt-1 w-full rounded-lg border border-cyan-400/25 bg-cyan-500/10 py-1 text-[11px] font-medium text-cyan-200 transition hover:bg-cyan-500/20"
-                    >
-                      {ta.testNotif}
-                    </button>
                   </div>
 
                   <div className="max-h-60 space-y-1.5 overflow-y-auto">
@@ -1466,41 +1425,19 @@ export default function App() {
               })()}
             </div>
 
-            {/* Language Selector */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setLangMenuOpen((v) => !v);
-                  setAlertsOpen(false);
-                }}
-                className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/10"
-              >
-                <Globe className="h-3.5 w-3.5 text-cyan-400" />
-                <span className="uppercase">{lang}</span>
-              </button>
-
-              {langMenuOpen && (
-                <div className="absolute end-0 mt-2 w-44 rounded-2xl border border-white/15 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-xl">
-                  {LANGUAGES.map((item) => (
-                    <button
-                      key={item.code}
-                      onClick={() => {
-                        updateSettings({ language: item.code });
-                        setLangMenuOpen(false);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-1.5 text-start text-xs transition ${
-                        lang === item.code
-                          ? 'bg-indigo-500/25 font-semibold text-white'
-                          : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                      }`}
-                    >
-                      <span>{item.name}</span>
-                      <span className="text-[10px] uppercase text-slate-400">{item.code}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Settings Modal Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                setAlertsOpen(false);
+                setSettingsTab('general');
+                setSettingsModalOpen(true);
+              }}
+              title={getSettingsStrings(settings.language).settingsBtn}
+              className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:border-cyan-400/30 hover:bg-white/10 hover:text-white"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
           </div>
         </header>
 
@@ -1622,9 +1559,19 @@ export default function App() {
                             </div>
                           </div>
                         ) : (
-                          <p className="mt-4 rounded-xl bg-slate-950/60 p-3 text-xs text-rose-300">
-                            {m?.error || t.connecting}
-                          </p>
+                          m?.error ? (() => {
+                            const fe = explainConnectionError(m.error, lang, !!settings.privacyMode);
+                            return (
+                              <div className="mt-4 space-y-1 rounded-xl border border-rose-500/15 bg-slate-950/60 p-3 text-xs">
+                                <p className="font-semibold text-rose-200">{fe.title}</p>
+                                <p className="text-[11px] leading-relaxed text-slate-400">{fe.hint}</p>
+                              </div>
+                            );
+                          })() : (
+                            <p className="mt-4 rounded-xl bg-slate-950/60 p-3 text-xs text-slate-400">
+                              {t.connecting}
+                            </p>
+                          )
                         )}
                       </div>
                     );
@@ -1674,11 +1621,25 @@ export default function App() {
                 <div className="min-w-0 flex-1">
                   <h2 className="text-xl font-bold text-rose-200">{t.serverOfflineTitle}</h2>
                   <p className="mt-1 text-sm text-rose-200/75">{t.serverOfflineDesc}</p>
-                  {currentMetrics.error && (
-                    <pre className="mt-4 overflow-x-auto rounded-xl border border-rose-500/20 bg-slate-950/80 p-3 font-mono text-xs text-rose-300">
-                      {currentMetrics.error}
-                    </pre>
-                  )}
+                  {currentMetrics.error && (() => {
+                    const fe = explainConnectionError(currentMetrics.error, lang, !!settings.privacyMode);
+                    return (
+                      <div className="mt-4 space-y-2.5 text-start">
+                        <div className="rounded-xl border border-rose-400/25 bg-slate-950/70 p-3.5">
+                          <p className="text-sm font-semibold text-rose-200">{fe.title}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-slate-300">{fe.hint}</p>
+                        </div>
+                        <details className="rounded-xl border border-white/10 bg-slate-950/50 px-3.5 py-2 text-xs">
+                          <summary className="cursor-pointer select-none text-[11px] font-medium text-slate-400 hover:text-slate-200">
+                            {getErrorTechLabel(lang)}
+                          </summary>
+                          <pre dir="ltr" className="mt-2 overflow-x-auto font-mono text-[11px] text-rose-300/90">
+                            {fe.technical}
+                          </pre>
+                        </details>
+                      </div>
+                    );
+                  })()}
                   {selectedServer.isDemo && (
                     <button
                       onClick={handleToggleDemoOutage}
@@ -2601,7 +2562,7 @@ export default function App() {
                     serverName={selectedServer.name}
                     language={settings.language}
                     onToast={pushToast}
-                  />
+                   autoBackupEnabled={!!settings.sftpAutoBackup} onOpenSettings={() => { setSettingsTab('sftp'); setSettingsModalOpen(true); }} />
                 </div>
               )}
 
@@ -3162,7 +3123,6 @@ export default function App() {
 
               {/* Per-Server Custom Alert Rules (Collapsible) */}
               {(() => {
-                const ta = getAlertStrings(settings.language);
                 const rules = serverForm.alertRules?.configured
                   ? serverForm.alertRules
                   : {
@@ -3527,6 +3487,20 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* GLOBAL SETTINGS MODAL */}
+      <SettingsModal
+        open={settingsModalOpen}
+        initialTab={settingsTab}
+        settings={settings}
+        appVersion="v0.4.0-dev"
+        simpleLabel={t.simpleMode}
+        proLabel={t.proMode}
+        onClose={() => setSettingsModalOpen(false)}
+        onUpdateSettings={(patch) => updateSettings(patch)}
+        onOpenSupport={() => setSupportModalOpen(true)}
+        onToast={(type, message) => pushToast(type, message)}
+      />
 
       {/* TOASTS */}
       <div className="pointer-events-none fixed bottom-4 right-4 z-50 space-y-2">

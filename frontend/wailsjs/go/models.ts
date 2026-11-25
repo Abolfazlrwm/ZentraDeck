@@ -48,6 +48,10 @@ export namespace main {
 	    desktopAlerts: boolean;
 	    minimizeToTray: boolean;
 	    alertPrefsInit: boolean;
+	    sftpAutoBackup: boolean;
+	    sftpMaxBackups: number;
+	    sftpKeepAllBackups: boolean;
+	    sftpBackupDir: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppSettings(source);
@@ -62,6 +66,10 @@ export namespace main {
 	        this.desktopAlerts = source["desktopAlerts"];
 	        this.minimizeToTray = source["minimizeToTray"];
 	        this.alertPrefsInit = source["alertPrefsInit"];
+	        this.sftpAutoBackup = source["sftpAutoBackup"];
+	        this.sftpMaxBackups = source["sftpMaxBackups"];
+	        this.sftpKeepAllBackups = source["sftpKeepAllBackups"];
+	        this.sftpBackupDir = source["sftpBackupDir"];
 	    }
 	}
 	export class CommandOutput {
@@ -442,6 +450,60 @@ export namespace main {
 		}
 	}
 	
+	export class SftpBackupItem {
+	    id: string;
+	    filePath: string;
+	    fileName: string;
+	    createdAt: string;
+	    size: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new SftpBackupItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.filePath = source["filePath"];
+	        this.fileName = source["fileName"];
+	        this.createdAt = source["createdAt"];
+	        this.size = source["size"];
+	    }
+	}
+	export class SftpBackupStats {
+	    totalCount: number;
+	    totalBytes: number;
+	    backupDir: string;
+	    isCustomDir: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new SftpBackupStats(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.totalCount = source["totalCount"];
+	        this.totalBytes = source["totalBytes"];
+	        this.backupDir = source["backupDir"];
+	        this.isCustomDir = source["isCustomDir"];
+	    }
+	}
+	export class SftpRestoreResult {
+	    success: boolean;
+	    message: string;
+	    content: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SftpRestoreResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.message = source["message"];
+	        this.content = source["content"];
+	    }
+	}
 	export class TriggeredAlert {
 	    id: string;
 	    serverId: string;

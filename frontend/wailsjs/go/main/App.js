@@ -74,12 +74,28 @@ export function RunQuickCommand(arg1, arg2) {
   return window['go']['main']['App']['RunQuickCommand'](arg1, arg2);
 }
 
+export function SFTPClearBackups(arg1) {
+  return window['go']['main']['App']['SFTPClearBackups'](arg1);
+}
+
 export function SFTPDelete(arg1, arg2) {
   return window['go']['main']['App']['SFTPDelete'](arg1, arg2);
 }
 
+export function SFTPDeleteBackup(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPDeleteBackup'](arg1, arg2, arg3);
+}
+
 export function SFTPDownloadFile(arg1, arg2) {
   return window['go']['main']['App']['SFTPDownloadFile'](arg1, arg2);
+}
+
+export function SFTPGetBackupStats() {
+  return window['go']['main']['App']['SFTPGetBackupStats']();
+}
+
+export function SFTPListBackups(arg1, arg2) {
+  return window['go']['main']['App']['SFTPListBackups'](arg1, arg2);
 }
 
 export function SFTPListDir(arg1, arg2) {
@@ -102,6 +118,10 @@ export function SFTPRename(arg1, arg2, arg3) {
   return window['go']['main']['App']['SFTPRename'](arg1, arg2, arg3);
 }
 
+export function SFTPRestoreBackup(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SFTPRestoreBackup'](arg1, arg2, arg3);
+}
+
 export function SFTPUploadFile(arg1, arg2) {
   return window['go']['main']['App']['SFTPUploadFile'](arg1, arg2);
 }
@@ -116,6 +136,10 @@ export function SaveServer(arg1) {
 
 export function SaveSettings(arg1) {
   return window['go']['main']['App']['SaveSettings'](arg1);
+}
+
+export function SelectBackupDir() {
+  return window['go']['main']['App']['SelectBackupDir']();
 }
 
 export function SelectKeyFile() {

@@ -38,9 +38,17 @@ export function ResizePTY(arg1:string,arg2:number,arg3:number):Promise<void>;
 
 export function RunQuickCommand(arg1:string,arg2:string):Promise<main.CommandOutput>;
 
+export function SFTPClearBackups(arg1:string):Promise<main.ActionResult>;
+
 export function SFTPDelete(arg1:string,arg2:string):Promise<main.ActionResult>;
 
+export function SFTPDeleteBackup(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
+
 export function SFTPDownloadFile(arg1:string,arg2:string):Promise<main.ActionResult>;
+
+export function SFTPGetBackupStats():Promise<main.SftpBackupStats>;
+
+export function SFTPListBackups(arg1:string,arg2:string):Promise<Array<main.SftpBackupItem>>;
 
 export function SFTPListDir(arg1:string,arg2:string):Promise<main.DirListResult>;
 
@@ -52,6 +60,8 @@ export function SFTPReadFile(arg1:string,arg2:string):Promise<main.FileContentRe
 
 export function SFTPRename(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
+export function SFTPRestoreBackup(arg1:string,arg2:string,arg3:string):Promise<main.SftpRestoreResult>;
+
 export function SFTPUploadFile(arg1:string,arg2:string):Promise<main.ActionResult>;
 
 export function SFTPWriteFile(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
@@ -59,6 +69,8 @@ export function SFTPWriteFile(arg1:string,arg2:string,arg3:string):Promise<main.
 export function SaveServer(arg1:main.ServerConfig):Promise<main.ServerConfig>;
 
 export function SaveSettings(arg1:main.AppSettings):Promise<main.AppSettings>;
+
+export function SelectBackupDir():Promise<string>;
 
 export function SelectKeyFile():Promise<string>;
 

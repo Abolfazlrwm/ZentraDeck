@@ -16,12 +16,15 @@ import {
   Folder,
   FolderOpen,
   FolderPlus,
+  History,
   Home,
   Maximize2,
   Minimize2,
   Pencil,
   Redo2,
   RefreshCw,
+  RotateCcw,
+  Settings,
   Save,
   Search,
   ShieldCheck,
@@ -40,15 +43,21 @@ import {
   SFTPReadFile,
   SFTPRename,
   SFTPUploadFile,
+  SFTPDeleteBackup,
+  SFTPListBackups,
+  SFTPRestoreBackup,
   SFTPWriteFile,
 } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
 import { getSftpStrings } from './sftpI18n';
+import { formatLocalBytes, getSettingsStrings } from './settingsI18n';
 
 interface SftpManagerProps {
   serverId: string;
   serverName: string;
   language: string;
+  autoBackupEnabled?: boolean;
+  onOpenSettings?: () => void;
   onToast: (type: 'success' | 'error', message: string) => void;
 }
 
@@ -135,7 +144,8 @@ async function copyTextToClipboard(text: string): Promise<boolean> {
   return false;
 }
 
-export default function SftpManager({ serverId, serverName, language, onToast }: SftpManagerProps) {
+export default function SftpManager({ serverId, serverName, language, autoBackupEnabled, onOpenSettings, onToast }: SftpManagerProps) {
+  const tset = getSettingsStrings(language);
   const ts = getSftpStrings(language);
 
   const [currentPath, setCurrentPath] = useState<string>('~');
@@ -360,6 +370,68 @@ export default function SftpManager({ serverId, serverName, language, onToast }:
     }
   };
 
+  const [backupsOpen, setBackupsOpen] = useState(false);
+  const [backups, setBackups] = useState<main.SftpBackupItem[]>([]);
+  const [backupsLoading, setBackupsLoading] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+
+  const loadBackups = useCallback(async (filePath: string) => {
+    setBackupsLoading(true);
+    try {
+      const list = await SFTPListBackups(serverId, filePath);
+      setBackups(list || []);
+    } catch {
+      setBackups([]);
+    } finally {
+      setBackupsLoading(false);
+    }
+  }, [serverId]);
+
+  useEffect(() => {
+    if (editorFile?.path) {
+      loadBackups(editorFile.path);
+    } else {
+      setBackups([]);
+      setBackupsOpen(false);
+    }
+  }, [editorFile?.path, loadBackups]);
+
+  const handleRestoreBackup = useCallback(async (backupId: string) => {
+    if (!editorFile || restoringId) return;
+    setRestoringId(backupId);
+    try {
+      const res = await SFTPRestoreBackup(serverId, editorFile.path, backupId);
+      if (res && res.success) {
+        setEditorFile((prev) => (prev ? { ...prev, content: res.content, original: res.content } : null));
+        onToast('success', tset.restoredToast);
+        loadBackups(editorFile.path);
+        loadDir(currentPath);
+        setBackupsOpen(false);
+      } else {
+        onToast('error', res?.message || 'Restore failed');
+      }
+    } catch (err) {
+      onToast('error', String(err));
+    } finally {
+      setRestoringId(null);
+    }
+  }, [editorFile, restoringId, serverId, tset.restoredToast, onToast, loadBackups, loadDir, currentPath]);
+
+  const handleDeleteBackup = useCallback(async (backupId: string) => {
+    if (!editorFile) return;
+    try {
+      const res = await SFTPDeleteBackup(serverId, editorFile.path, backupId);
+      if (res?.success) {
+        onToast('success', tset.backupDeleted);
+        loadBackups(editorFile.path);
+      } else {
+        onToast('error', res?.message || 'Delete failed');
+      }
+    } catch (err) {
+      onToast('error', String(err));
+    }
+  }, [editorFile, serverId, tset.backupDeleted, onToast, loadBackups]);
+
   const handleSaveEditor = useCallback(async (): Promise<boolean> => {
     if (!editorFile || editorSaving) return false;
     setEditorSaving(true);
@@ -368,6 +440,7 @@ export default function SftpManager({ serverId, serverName, language, onToast }:
       if (res && res.success) {
         setEditorFile((prev) => (prev ? { ...prev, original: prev.content } : null));
         onToast('success', res.message || 'Saved');
+        loadBackups(editorFile.path);
         loadDir(currentPath);
         return true;
       } else {
@@ -380,7 +453,7 @@ export default function SftpManager({ serverId, serverName, language, onToast }:
     } finally {
       setEditorSaving(false);
     }
-  }, [editorFile, editorSaving, serverId, currentPath, loadDir, onToast]);
+  }, [editorFile, editorSaving, serverId, currentPath, loadDir, loadBackups, onToast]);
 
   const isDirty = !!editorFile && editorFile.content !== editorFile.original;
 
@@ -1111,6 +1184,30 @@ export default function SftpManager({ serverId, serverName, language, onToast }:
                     )}
                   </button>
 
+                  {/* Local Backups / Restore Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !backupsOpen;
+                      setBackupsOpen(next);
+                      if (next && editorFile) loadBackups(editorFile.path);
+                    }}
+                    className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition ${
+                      backupsOpen
+                        ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
+                        : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                    title={tset.sftpBackupsTitle}
+                  >
+                    <History className="h-3.5 w-3.5" />
+                    <span className="hidden md:inline">{tset.restoreBtn}</span>
+                    {backups.length > 0 && (
+                      <span className="rounded-full bg-amber-500/25 px-1.5 text-[10px] font-bold text-amber-200">
+                        {backups.length}
+                      </span>
+                    )}
+                  </button>
+
                   {/* Save Button */}
                   <button
                     type="button"
@@ -1132,6 +1229,77 @@ export default function SftpManager({ serverId, serverName, language, onToast }:
                   </button>
                 </div>
               </div>
+
+              {/* Local Backups / Restore Drawer */}
+              {backupsOpen && (
+                <div className="border-b border-amber-400/20 bg-slate-950/90 px-4 py-3 text-xs">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-amber-200">{tset.sftpBackupsTitle}</span>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                          autoBackupEnabled
+                            ? 'border-emerald-400/30 bg-emerald-500/15 text-emerald-300'
+                            : 'border-slate-500/30 bg-slate-500/15 text-slate-400'
+                        }`}
+                      >
+                        {autoBackupEnabled ? tset.sftpAutoBackupOn : tset.sftpAutoBackupOff}
+                      </span>
+                    </div>
+                    {onOpenSettings && (
+                      <button
+                        type="button"
+                        onClick={onOpenSettings}
+                        className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300 transition hover:bg-white/10 hover:text-white"
+                      >
+                        <Settings className="h-3 w-3" />
+                        {tset.openSftpSettings}
+                      </button>
+                    )}
+                  </div>
+                  <p className="mb-2.5 text-[11px] text-slate-400">{tset.sftpBackupsDesc}</p>
+                  {backupsLoading ? (
+                    <div className="py-2 text-[11px] text-slate-400">...</div>
+                  ) : backups.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-3 py-2 text-[11px] text-slate-400">
+                      {tset.sftpNoBackupsYet}
+                    </div>
+                  ) : (
+                    <div className="max-h-36 space-y-1.5 overflow-y-auto">
+                      {backups.map((b) => (
+                        <div
+                          key={b.id}
+                          className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5"
+                        >
+                          <div className="flex items-center gap-3 font-mono text-[11px] text-slate-200">
+                            <span>{b.createdAt}</span>
+                            <span className="text-slate-400">{formatLocalBytes(b.size)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              disabled={!!restoringId}
+                              onClick={() => handleRestoreBackup(b.id)}
+                              className="inline-flex items-center gap-1 rounded-md border border-amber-400/30 bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-amber-200 transition hover:bg-amber-500/25 disabled:opacity-40"
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              {restoringId === b.id ? tset.restoring : tset.restoreAction}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteBackup(b.id)}
+                              title={tset.deleteBackup}
+                              className="rounded-md p-1 text-slate-400 transition hover:bg-rose-500/15 hover:text-rose-300"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Unsaved Changes Confirmation Banner */}
               {confirmCloseOpen && (
