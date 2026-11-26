@@ -30,13 +30,19 @@ import (
 )
 
 type AppSettings struct {
-	Language        string `json:"language"`
-	ViewMode        string `json:"viewMode"`
-	PrivacyMode     bool   `json:"privacyMode"`
-	PollIntervalSec int    `json:"pollIntervalSec"`
-	DesktopAlerts   bool   `json:"desktopAlerts"`
-	MinimizeToTray  bool   `json:"minimizeToTray"`
-	AlertPrefsInit  bool   `json:"alertPrefsInit"`
+	Language           string `json:"language"`
+	ViewMode           string `json:"viewMode"`
+	PrivacyMode        bool   `json:"privacyMode"`
+	PollIntervalSec    int    `json:"pollIntervalSec"`
+	DesktopAlerts      bool   `json:"desktopAlerts"`
+	MinimizeToTray     bool   `json:"minimizeToTray"`
+	AlertPrefsInit     bool   `json:"alertPrefsInit"`
+	SftpAutoBackup     bool   `json:"sftpAutoBackup"`
+	SftpMaxBackups     int    `json:"sftpMaxBackups"`
+	SftpKeepAllBackups bool   `json:"sftpKeepAllBackups"`
+	SftpBackupDir      string `json:"sftpBackupDir"`
+	ReportExportDir    string `json:"reportExportDir"`
+	ReportExportFormat string `json:"reportExportFormat"`
 }
 
 type ServerConfig struct {
@@ -215,13 +221,19 @@ var supportedLanguages = map[string]bool{
 
 func defaultSettings() AppSettings {
 	return AppSettings{
-		Language:        "en",
-		ViewMode:        "simple",
-		PrivacyMode:     false,
-		PollIntervalSec: 2,
-		DesktopAlerts:   true,
-		MinimizeToTray:  true,
-		AlertPrefsInit:  true,
+		Language:           "en",
+		ViewMode:           "simple",
+		PrivacyMode:        false,
+		PollIntervalSec:    2,
+		DesktopAlerts:      true,
+		MinimizeToTray:     true,
+		AlertPrefsInit:     true,
+		SftpAutoBackup:     false,
+		SftpMaxBackups:     5,
+		SftpKeepAllBackups: false,
+		SftpBackupDir:      "",
+		ReportExportDir:    "",
+		ReportExportFormat: "md",
 	}
 }
 
@@ -247,6 +259,18 @@ func (a *App) startup(ctx context.Context) {
 	_ = a.loadSettings()
 	_ = a.loadServers()
 	a.initAlertsAndTray()
+}
+
+func (a *App) SelectReportDir() (string, error) {
+	return wailsruntime.OpenDirectoryDialog(a.ctx, wailsruntime.OpenDialogOptions{
+		Title: "Select Server Reports Export Folder",
+	})
+}
+
+func (a *App) SelectBackupDir() (string, error) {
+	return wailsruntime.OpenDirectoryDialog(a.ctx, wailsruntime.OpenDialogOptions{
+		Title: "Select Local SFTP Backup Folder",
+	})
 }
 
 func (a *App) SelectKeyFile() (string, error) {
@@ -281,6 +305,14 @@ func (a *App) loadSettings() error {
 	if s.PollIntervalSec < 1 || s.PollIntervalSec > 60 {
 		s.PollIntervalSec = 2
 	}
+	if s.SftpMaxBackups < 1 || s.SftpMaxBackups > 1000 {
+		s.SftpMaxBackups = 5
+	}
+	s.SftpBackupDir = strings.TrimSpace(s.SftpBackupDir)
+	s.ReportExportDir = strings.TrimSpace(s.ReportExportDir)
+	if s.ReportExportFormat != "md" && s.ReportExportFormat != "txt" {
+		s.ReportExportFormat = "md"
+	}
 	a.mu.Lock()
 	s.AlertPrefsInit = true
 	a.settings = s
@@ -303,6 +335,14 @@ func (a *App) SaveSettings(s AppSettings) (AppSettings, error) {
 	}
 	if s.PollIntervalSec < 1 || s.PollIntervalSec > 60 {
 		s.PollIntervalSec = 2
+	}
+	if s.SftpMaxBackups < 1 || s.SftpMaxBackups > 1000 {
+		s.SftpMaxBackups = 5
+	}
+	s.SftpBackupDir = strings.TrimSpace(s.SftpBackupDir)
+	s.ReportExportDir = strings.TrimSpace(s.ReportExportDir)
+	if s.ReportExportFormat != "md" && s.ReportExportFormat != "txt" {
+		s.ReportExportFormat = "md"
 	}
 	a.mu.Lock()
 	s.AlertPrefsInit = true

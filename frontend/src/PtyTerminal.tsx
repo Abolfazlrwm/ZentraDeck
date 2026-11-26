@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { describeTerminalCommand } from './linuxKnowledge';
 import { createPortal } from 'react-dom';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -573,6 +574,7 @@ export default function PtyTerminal({
             key={q.label}
             type="button"
             disabled={status !== 'connected'}
+            title={describeTerminalCommand(q.cmd, language || 'en')}
             onClick={() => sendRaw(q.cmd)}
             className="hidden rounded-lg border border-white/10 bg-white/5 px-2 py-1 font-mono text-[11px] text-slate-300 transition hover:border-cyan-400/30 hover:bg-cyan-500/10 hover:text-cyan-200 disabled:opacity-40 xl:inline-flex"
           >

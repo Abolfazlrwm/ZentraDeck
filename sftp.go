@@ -665,24 +665,39 @@ func (a *App) SFTPWriteFile(serverID, filePath, content string) ActionResult {
 		return ActionResult{Success: false, Message: "file content exceeds 2 MB safety limit"}
 	}
 
+	autoBackup, keepAllBackups, maxBackups, _ := a.getSftpBackupConfig()
+
 	if cfg.IsDemo {
+		var prevDemo []byte
+		var shouldBackup bool
 		demoFSMu.Lock()
-		defer demoFSMu.Unlock()
 		fs := getOrInitDemoFS(serverID, cfg.Username)
 		now := time.Now().Format("2006-01-02 15:04")
 		if node, exists := fs[target]; exists {
 			if node.isDir {
+				demoFSMu.Unlock()
 				return ActionResult{Success: false, Message: "target is a directory"}
+			}
+			if autoBackup && node.content != content {
+				prevDemo = []byte(node.content)
+				shouldBackup = true
 			}
 			node.content = content
 			node.modTime = now
 		} else {
 			fs[target] = &demoFSNode{isDir: false, content: content, mode: "-rw-r--r--", modTime: now}
 		}
+		demoFSMu.Unlock()
+		if shouldBackup {
+			_ = a.saveLocalSftpBackup(serverID, target, prevDemo, keepAllBackups, maxBackups)
+		}
 		return ActionResult{Success: true, Message: "Saved " + path.Base(target)}
 	}
 
 	err := a.withSFTP(cfg, func(sc *sftp.Client, _ string) error {
+		if autoBackup {
+			a.backupRemoteFileIfNeeded(sc, serverID, target, content, keepAllBackups, maxBackups)
+		}
 		return writeFileAtomicSFTP(sc, target, content)
 	})
 	if err != nil {

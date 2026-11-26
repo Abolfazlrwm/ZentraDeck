@@ -1,6 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  Maximize2,
+  Minimize2,
+  WrapText,
   Activity,
   AlertTriangle,
   Bell,
@@ -17,8 +20,8 @@ import {
   EyeOff,
   FileDown,
   FolderOpen,
-  Globe,
   HardDrive,
+  History,
   Heart,
   KeyRound,
   LayoutGrid,
@@ -33,6 +36,8 @@ import {
   Search,
   Send,
   Server,
+  Radio,
+  Settings,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -79,9 +84,7 @@ import {
   StartQuickCommand,
   SaveServer,
   EvaluateServerAlerts,
-  SendTestNotification,
   UpdateTraySummary,
-  QuitApp,
   SaveSettings,
   SelectKeyFile,
   TestConnection,
@@ -89,12 +92,24 @@ import {
 } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
 import { BrowserOpenURL, EventsOn } from '../wailsjs/runtime/runtime';
-import { LANGUAGES, LanguageCode, translations } from './i18n';
-import { getAlertStrings } from './alertI18n';
-import PtyTerminal, { type PtyContainerTarget } from './PtyTerminal';
+import { LanguageCode, translations } from './i18n';
+import type { PtyContainerTarget } from './PtyTerminal';
+const PtyTerminal = lazy(() => import('./PtyTerminal'));
 import { getPtyStrings } from './ptyI18n';
 import SftpManager from './SftpManager';
+import { getAlertStrings } from './alertI18n';
 import { getSftpStrings } from './sftpI18n';
+import type { SettingsTab } from './SettingsModal';
+const SettingsModal = lazy(() => import('./SettingsModal'));
+import { getSettingsStrings } from './settingsI18n';
+const HistoryPanel = lazy(() => import('./HistoryPanel'));
+import { getHistoryStrings } from './historyI18n';
+const SecurityCronPanel = lazy(() => import('./SecurityCronPanel'));
+import { getSecurityCronStrings } from './securityCronI18n';
+const BroadcastSnippetsModal = lazy(() => import('./BroadcastSnippetsModal'));
+import { getBroadcastStrings } from './broadcastI18n';
+import { describeProcess, describeService, describeTerminalCommand, getLogsModalStrings } from './linuxKnowledge';
+import { explainConnectionError, getErrorTechLabel } from './errorExplain';
 import { HELP_TOOLTIPS } from './helpTooltips';
 import { DONATION_WALLETS } from './wallets';
 
@@ -143,7 +158,7 @@ interface ConfirmDialogState {
   onConfirm: () => void;
 }
 
-type ServerTab = 'overview' | 'processes' | 'docker' | 'services' | 'network' | 'files' | 'terminal';
+type ServerTab = 'overview' | 'history' | 'security' | 'processes' | 'docker' | 'services' | 'network' | 'files' | 'terminal';
 
 const MAX_HISTORY = 30;
 const DOT = '\u2022';
@@ -316,7 +331,12 @@ export default function App() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   // Dropdowns & Modals
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [logsWrap, setLogsWrap] = useState(true);
+  const [logsExpanded, setLogsExpanded] = useState(false);
+  const [logsCopied, setLogsCopied] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [serverModalOpen, setServerModalOpen] = useState(false);
 
@@ -379,6 +399,7 @@ export default function App() {
   const prevOnlineRef = useRef<Record<string, boolean>>({});
   const lang = (settings.language as LanguageCode) in translations ? (settings.language as LanguageCode) : 'en';
   const t = translations[lang];
+  const ta = getAlertStrings(lang);
   const h = HELP_TOOLTIPS[lang] || HELP_TOOLTIPS.en;
   const isPro = settings.viewMode === 'pro';
   const isRtl = lang === 'fa';
@@ -996,6 +1017,8 @@ export default function App() {
 
   const navTabs: { id: ServerTab; label: string; icon: React.ReactNode; badge?: number; proOnly?: boolean }[] = [
     { id: 'overview', label: t.tabOverview, icon: <Activity className="h-3.5 w-3.5" /> },
+    { id: 'history', label: getHistoryStrings(settings.language).tabHistory, icon: <History className="h-3.5 w-3.5" /> },
+    { id: 'security', label: getSecurityCronStrings(settings.language).tabLabel, icon: <ShieldCheck className="h-3.5 w-3.5" /> },
     { id: 'processes', label: t.tabProcesses, icon: <ListTree className="h-3.5 w-3.5" />, badge: processes.length },
     { id: 'docker', label: t.tabDocker, icon: <Box className="h-3.5 w-3.5" />, badge: containers.length },
     {
@@ -1034,7 +1057,7 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base font-bold tracking-tight text-white">ZentraDeck</span>
-                <button type="button" onClick={() => BrowserOpenURL('https://github.com/CyberRhythm/ZentraDeck/releases')} title="View releases on GitHub" className="cursor-pointer transition hover:border-cyan-400/50 hover:text-cyan-300 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300">v0.3.0</button>
+                <button type="button" onClick={() => BrowserOpenURL('https://github.com/CyberRhythm/ZentraDeck/releases')} title="View releases on GitHub" className="cursor-pointer transition hover:border-cyan-400/50 hover:text-cyan-300 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300">v0.4.0</button>
               </div>
               <p className="text-[11px] text-slate-400">{t.openSourceFree}</p>
             </div>
@@ -1345,7 +1368,6 @@ export default function App() {
               <button
                 onClick={() => {
                   setAlertsOpen((v) => !v);
-                  setLangMenuOpen(false);
                   setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
                 }}
                 className="relative flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
@@ -1359,7 +1381,6 @@ export default function App() {
               </button>
 
               {alertsOpen && (() => {
-                const ta = getAlertStrings(settings.language);
                 return (
                 <div className="absolute end-0 mt-2 w-80 rounded-2xl border border-white/15 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-xl">
                   <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-2">
@@ -1374,60 +1395,18 @@ export default function App() {
                         </button>
                       )}
                       <button
-                        onClick={() => QuitApp()}
-                        className="rounded-md border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 text-[10px] text-rose-300 transition hover:bg-rose-500/20"
+                        type="button"
+                        onClick={() => {
+                          setAlertsOpen(false);
+                          setSettingsTab('alerts');
+                          setSettingsModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md border border-cyan-400/25 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium text-cyan-200 transition hover:bg-cyan-500/20"
                       >
-                        {ta.quitApp}
+                        <Settings className="h-3 w-3" />
+                        {getSettingsStrings(settings.language).alertSettingsLink}
                       </button>
                     </div>
-                  </div>
-
-                  {/* Global Desktop Alerts & System Tray Controls */}
-                  <div className="mb-2.5 space-y-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-[11px]">
-                    <label className="flex cursor-pointer items-center justify-between gap-2 text-slate-200">
-                      <span>{ta.desktopAlerts}</span>
-                      <input
-                        type="checkbox"
-                        checked={settings.desktopAlerts !== false}
-                        onChange={async (e) => {
-                          const next = main.AppSettings.createFrom({
-                            ...settings,
-                            desktopAlerts: e.target.checked,
-                            alertPrefsInit: true,
-                          });
-                          setSettings(next);
-                          await SaveSettings(next);
-                        }}
-                        className="h-3.5 w-3.5 accent-cyan-400"
-                      />
-                    </label>
-                    <label className="flex cursor-pointer items-center justify-between gap-2 text-slate-200">
-                      <span>{ta.minimizeToTray}</span>
-                      <input
-                        type="checkbox"
-                        checked={settings.minimizeToTray !== false}
-                        onChange={async (e) => {
-                          const next = main.AppSettings.createFrom({
-                            ...settings,
-                            minimizeToTray: e.target.checked,
-                            alertPrefsInit: true,
-                          });
-                          setSettings(next);
-                          await SaveSettings(next);
-                        }}
-                        className="h-3.5 w-3.5 accent-cyan-400"
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const res = await SendTestNotification();
-                        if (!res.success) pushToast('error', res.message);
-                      }}
-                      className="mt-1 w-full rounded-lg border border-cyan-400/25 bg-cyan-500/10 py-1 text-[11px] font-medium text-cyan-200 transition hover:bg-cyan-500/20"
-                    >
-                      {ta.testNotif}
-                    </button>
                   </div>
 
                   <div className="max-h-60 space-y-1.5 overflow-y-auto">
@@ -1466,41 +1445,32 @@ export default function App() {
               })()}
             </div>
 
-            {/* Language Selector */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setLangMenuOpen((v) => !v);
-                  setAlertsOpen(false);
-                }}
-                className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/10"
-              >
-                <Globe className="h-3.5 w-3.5 text-cyan-400" />
-                <span className="uppercase">{lang}</span>
-              </button>
+            {/* Broadcast & Snippets Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                setAlertsOpen(false);
+                setBroadcastOpen(true);
+              }}
+              title={getBroadcastStrings(settings.language).triggerBtn}
+              className="flex items-center justify-center rounded-xl border border-indigo-400/25 bg-indigo-500/10 p-2 text-indigo-200 transition hover:border-indigo-400/45 hover:bg-indigo-500/20 hover:text-white"
+            >
+              <Radio className="h-4 w-4" />
+            </button>
 
-              {langMenuOpen && (
-                <div className="absolute end-0 mt-2 w-44 rounded-2xl border border-white/15 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-xl">
-                  {LANGUAGES.map((item) => (
-                    <button
-                      key={item.code}
-                      onClick={() => {
-                        updateSettings({ language: item.code });
-                        setLangMenuOpen(false);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-1.5 text-start text-xs transition ${
-                        lang === item.code
-                          ? 'bg-indigo-500/25 font-semibold text-white'
-                          : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                      }`}
-                    >
-                      <span>{item.name}</span>
-                      <span className="text-[10px] uppercase text-slate-400">{item.code}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Settings Modal Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                setAlertsOpen(false);
+                setSettingsTab('general');
+                setSettingsModalOpen(true);
+              }}
+              title={getSettingsStrings(settings.language).settingsBtn}
+              className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:border-cyan-400/30 hover:bg-white/10 hover:text-white"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
           </div>
         </header>
 
@@ -1622,9 +1592,19 @@ export default function App() {
                             </div>
                           </div>
                         ) : (
-                          <p className="mt-4 rounded-xl bg-slate-950/60 p-3 text-xs text-rose-300">
-                            {m?.error || t.connecting}
-                          </p>
+                          m?.error ? (() => {
+                            const fe = explainConnectionError(m.error, lang, !!settings.privacyMode);
+                            return (
+                              <div className="mt-4 space-y-1 rounded-xl border border-rose-500/15 bg-slate-950/60 p-3 text-xs">
+                                <p className="font-semibold text-rose-200">{fe.title}</p>
+                                <p className="text-[11px] leading-relaxed text-slate-400">{fe.hint}</p>
+                              </div>
+                            );
+                          })() : (
+                            <p className="mt-4 rounded-xl bg-slate-950/60 p-3 text-xs text-slate-400">
+                              {t.connecting}
+                            </p>
+                          )
                         )}
                       </div>
                     );
@@ -1674,11 +1654,25 @@ export default function App() {
                 <div className="min-w-0 flex-1">
                   <h2 className="text-xl font-bold text-rose-200">{t.serverOfflineTitle}</h2>
                   <p className="mt-1 text-sm text-rose-200/75">{t.serverOfflineDesc}</p>
-                  {currentMetrics.error && (
-                    <pre className="mt-4 overflow-x-auto rounded-xl border border-rose-500/20 bg-slate-950/80 p-3 font-mono text-xs text-rose-300">
-                      {currentMetrics.error}
-                    </pre>
-                  )}
+                  {currentMetrics.error && (() => {
+                    const fe = explainConnectionError(currentMetrics.error, lang, !!settings.privacyMode);
+                    return (
+                      <div className="mt-4 space-y-2.5 text-start">
+                        <div className="rounded-xl border border-rose-400/25 bg-slate-950/70 p-3.5">
+                          <p className="text-sm font-semibold text-rose-200">{fe.title}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-slate-300">{fe.hint}</p>
+                        </div>
+                        <details className="rounded-xl border border-white/10 bg-slate-950/50 px-3.5 py-2 text-xs">
+                          <summary className="cursor-pointer select-none text-[11px] font-medium text-slate-400 hover:text-slate-200">
+                            {getErrorTechLabel(lang)}
+                          </summary>
+                          <pre dir="ltr" className="mt-2 overflow-x-auto font-mono text-[11px] text-rose-300/90">
+                            {fe.technical}
+                          </pre>
+                        </details>
+                      </div>
+                    );
+                  })()}
                   {selectedServer.isDemo && (
                     <button
                       onClick={handleToggleDemoOutage}
@@ -1738,6 +1732,26 @@ export default function App() {
               </div>
 
               {/* TAB 1: OVERVIEW */}
+              {activeTab === 'history' && selectedServer && (
+                <Suspense fallback={null}><HistoryPanel
+                  serverId={selectedServer.id}
+                  serverName={selectedServer.name}
+                  isDemo={!!selectedServer.isDemo}
+                  language={settings.language}
+                  privacyMode={!!settings.privacyMode}
+                  reportFormat={settings.reportExportFormat || 'md'}
+                  onToast={(type, message) => pushToast(type, message)}
+                /></Suspense>
+              )}
+
+              {activeTab === 'security' && selectedServer && (
+                <Suspense fallback={null}><SecurityCronPanel
+                  serverId={selectedServer.id}
+                  language={settings.language}
+                  onToast={(type, message) => pushToast(type, message)}
+                /></Suspense>
+              )}
+
               {activeTab === 'overview' && (
                 <div className="space-y-5">
                   {/* Health Banner */}
@@ -2191,48 +2205,59 @@ export default function App() {
                           <tr className="border-b border-white/10 text-[11px] uppercase text-slate-400">
                             <th
                               onClick={() => toggleProcSort('pid')}
-                              className="cursor-pointer pb-2.5 pe-3 hover:text-white"
+                              className="cursor-pointer px-3 pb-2.5 text-start hover:text-white"
                             >
                               {t.pid}
                             </th>
                             <th
                               onClick={() => toggleProcSort('command')}
-                              className="cursor-pointer pb-2.5 pe-3 hover:text-white"
+                              className="cursor-pointer px-3 pb-2.5 text-start hover:text-white"
                             >
                               {t.command}
                             </th>
-                            <th className="pb-2.5 pe-3">{t.user}</th>
+                            <th className="px-3 pb-2.5 text-start">{t.user}</th>
                             <th
                               onClick={() => toggleProcSort('cpu')}
-                              className="cursor-pointer pb-2.5 pe-3 hover:text-cyan-300"
+                              className="cursor-pointer px-3 pb-2.5 text-start hover:text-cyan-300"
                             >
                               CPU %
                             </th>
                             <th
                               onClick={() => toggleProcSort('mem')}
-                              className="cursor-pointer pb-2.5 pe-3 hover:text-indigo-300"
+                              className="cursor-pointer px-3 pb-2.5 text-start hover:text-indigo-300"
                             >
                               RAM %
                             </th>
-                            {isPro && <th className="pb-2.5 text-end">Action</th>}
+                            {isPro && <th className="px-3 pb-2.5 text-end">Action</th>}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                          {sortedProcesses.map((proc) => (
+                          {sortedProcesses.map((proc) => {
+                            const procDesc = describeProcess(proc.command, lang);
+                            return (
                             <tr key={proc.pid} className="hover:bg-white/[0.02]">
-                              <td className="py-2.5 pe-3 font-mono text-slate-400">{proc.pid}</td>
-                              <td className="py-2.5 pe-3 font-mono font-semibold text-white">
-                                {proc.command}
+                              <td className="whitespace-nowrap px-3 py-2.5 font-mono text-slate-400">
+                                <span dir="ltr" className="inline-block">{proc.pid}</span>
                               </td>
-                              <td className="py-2.5 pe-3 text-slate-300">{proc.user}</td>
-                              <td className="py-2.5 pe-3 font-mono font-semibold text-cyan-300">
-                                {proc.cpu.toFixed(1)}%
+                              <td className="max-w-xs px-3 py-2.5" title={procDesc || proc.command}>
+                                <div className="truncate font-mono font-semibold text-white">
+                                  <span dir="ltr" className="inline-block">{proc.command}</span>
+                                </div>
+                                {procDesc && (
+                                  <div className="mt-0.5 truncate text-[10px] text-slate-400">{procDesc}</div>
+                                )}
                               </td>
-                              <td className="py-2.5 pe-3 font-mono font-semibold text-indigo-300">
-                                {proc.mem.toFixed(1)}%
+                              <td className="whitespace-nowrap px-3 py-2.5 text-slate-300">
+                                <span dir="ltr" className="inline-block rounded bg-white/5 px-1.5 py-0.5 font-mono text-[11px]">{proc.user}</span>
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-2.5 font-mono font-semibold text-cyan-300">
+                                <span dir="ltr" className="inline-block">{proc.cpu.toFixed(1)}%</span>
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-2.5 font-mono font-semibold text-indigo-300">
+                                <span dir="ltr" className="inline-block">{proc.mem.toFixed(1)}%</span>
                               </td>
                               {isPro && (
-                                <td className="py-2.5 text-end">
+                                <td className="whitespace-nowrap px-3 py-2.5 text-end">
                                   <div className="inline-flex items-center gap-1.5">
                                     <button
                                       disabled={busyAction !== null}
@@ -2254,7 +2279,8 @@ export default function App() {
                                 </td>
                               )}
                             </tr>
-                          ))}
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -2460,11 +2486,14 @@ export default function App() {
                                   {svc.status} ({svc.subState})
                                 </span>
                               </div>
-                              {svc.description && (
-                                <p className="mt-0.5 truncate ps-4 text-[11px] text-slate-400">
-                                  {svc.description}
-                                </p>
-                              )}
+                              {(() => {
+                                const locDesc = describeService(svc.name, svc.description, lang);
+                                return locDesc ? (
+                                  <p className="mt-0.5 truncate ps-4 text-[11px] text-slate-400" title={svc.description || locDesc}>
+                                    {locDesc}
+                                  </p>
+                                ) : null;
+                              })()}
                             </div>
 
                             <div className="flex shrink-0 items-center gap-1.5">
@@ -2601,7 +2630,7 @@ export default function App() {
                     serverName={selectedServer.name}
                     language={settings.language}
                     onToast={pushToast}
-                  />
+                   autoBackupEnabled={!!settings.sftpAutoBackup} onOpenSettings={() => { setSettingsTab('sftp'); setSettingsModalOpen(true); }} />
                 </div>
               )}
 
@@ -2675,7 +2704,7 @@ export default function App() {
                       activeTab === 'terminal' && termMode === 'pty' && selectedServer?.id === pid;
                     return (
                       <div key={pid} className={visible ? 'block' : 'hidden'}>
-                        <PtyTerminal
+                        <Suspense fallback={null}><PtyTerminal
                           serverId={srv.id}
                           serverName={srv.name}
                           username={srv.username}
@@ -2690,7 +2719,7 @@ export default function App() {
                           onExitContainer={() =>
                             setPtyTargets((prev) => ({ ...prev, [pid]: null }))
                           }
-                        />
+                        /></Suspense>
                       </div>
                     );
                   })}
@@ -2728,7 +2757,7 @@ export default function App() {
                         <button
                           key={preset.cmd}
                           disabled={cmdRunning}
-                          title={preset.cmd}
+                          title={describeTerminalCommand(preset.cmd, lang)}
                           onClick={() => handleRunCommand(preset.cmd)}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900/90 px-2.5 py-1 text-[11px] transition hover:border-cyan-400/40 hover:bg-cyan-500/10 disabled:opacity-50"
                         >
@@ -3162,7 +3191,6 @@ export default function App() {
 
               {/* Per-Server Custom Alert Rules (Collapsible) */}
               {(() => {
-                const ta = getAlertStrings(settings.language);
                 const rules = serverForm.alertRules?.configured
                   ? serverForm.alertRules
                   : {
@@ -3359,33 +3387,92 @@ export default function App() {
 
       {/* LOGS MODAL (SYSTEMD & DOCKER) */}
       {logsModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[80vh] w-full max-w-3xl flex-col rounded-3xl border border-white/15 bg-slate-950 p-5 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-cyan-400" />
-                <h2 className="text-sm font-bold text-white">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setLogsModal((prev) => ({ ...prev, open: false }));
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm sm:p-4"
+        >
+          <div
+            className={`flex flex-col rounded-3xl border border-white/15 bg-slate-950 p-4 shadow-2xl transition-all sm:p-5 ${
+              logsExpanded ? 'h-[92vh] w-[96vw] max-w-none' : 'h-[82vh] w-full max-w-5xl'
+            }`}
+          >
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <Terminal className="h-4 w-4 shrink-0 text-cyan-400" />
+                <h2 className="truncate text-sm font-bold text-white">
                   {logsModal.kind === 'docker' ? t.containerLogs : t.serviceLogs}:{' '}
-                  <span className="font-mono text-cyan-300">{logsModal.title}</span>
+                  <span dir="ltr" className="inline-block font-mono text-cyan-300">
+                    {logsModal.title}
+                  </span>
                 </h2>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-1.5">
                 <button
+                  type="button"
+                  onClick={() => setLogsWrap((w) => !w)}
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition ${
+                    logsWrap
+                      ? 'border-cyan-400/40 bg-cyan-500/15 text-cyan-200'
+                      : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+                  }`}
+                  title={getLogsModalStrings(lang).wrap}
+                >
+                  <WrapText className="h-3.5 w-3.5" />
+                  <span>{getLogsModalStrings(lang).wrap}</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={logsModal.loading || !logsModal.content}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(logsModal.content || '');
+                      setLogsCopied(true);
+                      pushToast('success', getLogsModalStrings(lang).copiedToast);
+                      setTimeout(() => setLogsCopied(false), 1800);
+                    } catch {
+                      pushToast('error', 'Clipboard unavailable');
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-200 transition hover:bg-emerald-500/25 disabled:opacity-40"
+                >
+                  {logsCopied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
+                  <span>
+                    {logsCopied ? getLogsModalStrings(lang).copied : getLogsModalStrings(lang).copyAll}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLogsExpanded((v) => !v)}
+                  className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                  title={logsExpanded ? getLogsModalStrings(lang).restore : getLogsModalStrings(lang).fullscreen}
+                >
+                  {logsExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleOpenLogs(logsModal.kind, logsModal.target, logsModal.title)}
-                  className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-slate-300 hover:bg-white/10"
+                  className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-slate-300 transition hover:bg-white/10 hover:text-white"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${logsModal.loading ? 'animate-spin' : ''}`} />
                 </button>
                 <button
+                  type="button"
                   onClick={() => setLogsModal((prev) => ({ ...prev, open: false }))}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                  className="rounded-lg p-1 text-slate-400 transition hover:bg-white/10 hover:text-white"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
-            <pre className="flex-1 overflow-auto rounded-2xl border border-white/10 bg-[#05080f] p-4 font-mono text-xs leading-relaxed text-emerald-300 select-text">
+            <pre
+              dir="ltr"
+              className={`flex-1 overflow-auto rounded-2xl border border-white/10 bg-[#05080f] p-4 font-mono text-xs leading-relaxed text-emerald-300 select-text ${
+                logsWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'
+              }`}
+            >
               {logsModal.loading ? t.loadingLogs : logsModal.content}
             </pre>
           </div>
@@ -3527,6 +3614,30 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* BROADCAST & SNIPPETS MODAL */}
+      <Suspense fallback={null}><BroadcastSnippetsModal
+        open={broadcastOpen}
+        servers={activeServers}
+        language={settings.language}
+        privacyMode={!!settings.privacyMode}
+        onClose={() => setBroadcastOpen(false)}
+        onToast={(type, message) => pushToast(type, message)}
+      /></Suspense>
+
+      {/* GLOBAL SETTINGS MODAL */}
+      {settingsModalOpen && (<Suspense fallback={null}><SettingsModal
+        open={settingsModalOpen}
+        initialTab={settingsTab}
+        settings={settings}
+        appVersion="v0.4.0-dev"
+        simpleLabel={t.simpleMode}
+        proLabel={t.proMode}
+        onClose={() => setSettingsModalOpen(false)}
+        onUpdateSettings={(patch) => updateSettings(patch)}
+        onOpenSupport={() => setSupportModalOpen(true)}
+        onToast={(type, message) => pushToast(type, message)}
+      /></Suspense>)}
 
       {/* TOASTS */}
       <div className="pointer-events-none fixed bottom-4 right-4 z-50 space-y-2">
