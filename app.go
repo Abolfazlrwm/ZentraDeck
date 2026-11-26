@@ -1557,7 +1557,7 @@ func (a *App) GetServiceLogs(serverID, serviceName string) (string, error) {
 		return "", errors.New("server not found")
 	}
 	if cfg.IsDemo {
-		now := time.Now().Format("Nov 02 15:04:05")
+		now := time.Now().Format("Jan 02 15:04:05")
 		return fmt.Sprintf(
 			"%s %s systemd[1]: Starting %s...\n%s %s %s[1842]: Worker pool initialized\n%s %s %s[1842]: Health check passed (1.4ms)\n%s %s systemd[1]: Started %s.",
 			now, cfg.Name, serviceName,
