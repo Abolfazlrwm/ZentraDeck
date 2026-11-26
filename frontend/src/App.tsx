@@ -98,6 +98,8 @@ import SettingsModal, { type SettingsTab } from './SettingsModal';
 import { getSettingsStrings } from './settingsI18n';
 import HistoryPanel from './HistoryPanel';
 import { getHistoryStrings } from './historyI18n';
+import SecurityCronPanel from './SecurityCronPanel';
+import { getSecurityCronStrings } from './securityCronI18n';
 import { explainConnectionError, getErrorTechLabel } from './errorExplain';
 import { HELP_TOOLTIPS } from './helpTooltips';
 import { DONATION_WALLETS } from './wallets';
@@ -147,7 +149,7 @@ interface ConfirmDialogState {
   onConfirm: () => void;
 }
 
-type ServerTab = 'overview' | 'history' | 'processes' | 'docker' | 'services' | 'network' | 'files' | 'terminal';
+type ServerTab = 'overview' | 'history' | 'security' | 'processes' | 'docker' | 'services' | 'network' | 'files' | 'terminal';
 
 const MAX_HISTORY = 30;
 const DOT = '\u2022';
@@ -1003,6 +1005,7 @@ export default function App() {
   const navTabs: { id: ServerTab; label: string; icon: React.ReactNode; badge?: number; proOnly?: boolean }[] = [
     { id: 'overview', label: t.tabOverview, icon: <Activity className="h-3.5 w-3.5" /> },
     { id: 'history', label: getHistoryStrings(settings.language).tabHistory, icon: <History className="h-3.5 w-3.5" /> },
+    { id: 'security', label: getSecurityCronStrings(settings.language).tabLabel, icon: <ShieldCheck className="h-3.5 w-3.5" /> },
     { id: 'processes', label: t.tabProcesses, icon: <ListTree className="h-3.5 w-3.5" />, badge: processes.length },
     { id: 'docker', label: t.tabDocker, icon: <Box className="h-3.5 w-3.5" />, badge: containers.length },
     {
@@ -1711,6 +1714,14 @@ export default function App() {
                   language={settings.language}
                   privacyMode={!!settings.privacyMode}
                   reportFormat={settings.reportExportFormat || 'md'}
+                  onToast={(type, message) => pushToast(type, message)}
+                />
+              )}
+
+              {activeTab === 'security' && selectedServer && (
+                <SecurityCronPanel
+                  serverId={selectedServer.id}
+                  language={settings.language}
                   onToast={(type, message) => pushToast(type, message)}
                 />
               )}

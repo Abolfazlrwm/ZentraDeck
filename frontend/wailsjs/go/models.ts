@@ -92,6 +92,28 @@ export namespace main {
 	        this.durationMs = source["durationMs"];
 	    }
 	}
+	export class CronJobItem {
+	    lineIndex: number;
+	    schedule: string;
+	    command: string;
+	    comment: string;
+	    enabled: boolean;
+	    source: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CronJobItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.lineIndex = source["lineIndex"];
+	        this.schedule = source["schedule"];
+	        this.command = source["command"];
+	        this.comment = source["comment"];
+	        this.enabled = source["enabled"];
+	        this.source = source["source"];
+	    }
+	}
 	export class FileEntry {
 	    name: string;
 	    path: string;
@@ -437,6 +459,26 @@ export namespace main {
 	        this.format = source["format"];
 	    }
 	}
+	export class SSLCertInfo {
+	    domain: string;
+	    path: string;
+	    expiresAt: string;
+	    daysLeft: number;
+	    status: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SSLCertInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.domain = source["domain"];
+	        this.path = source["path"];
+	        this.expiresAt = source["expiresAt"];
+	        this.daysLeft = source["daysLeft"];
+	        this.status = source["status"];
+	    }
+	}
 	export class SaveReportResult {
 	    success: boolean;
 	    filePath: string;
@@ -453,6 +495,129 @@ export namespace main {
 	        this.message = source["message"];
 	    }
 	}
+	export class SystemdTimerItem {
+	    unit: string;
+	    nextRun: string;
+	    lastRun: string;
+	    activates: string;
+	    active: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new SystemdTimerItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.unit = source["unit"];
+	        this.nextRun = source["nextRun"];
+	        this.lastRun = source["lastRun"];
+	        this.activates = source["activates"];
+	        this.active = source["active"];
+	    }
+	}
+	export class ScheduledTasksReport {
+	    serverId: string;
+	    cronJobs: CronJobItem[];
+	    timers: SystemdTimerItem[];
+	    generatedAt: string;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ScheduledTasksReport(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.serverId = source["serverId"];
+	        this.cronJobs = this.convertValues(source["cronJobs"], CronJobItem);
+	        this.timers = this.convertValues(source["timers"], SystemdTimerItem);
+	        this.generatedAt = source["generatedAt"];
+	        this.error = source["error"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class SecurityCheckItem {
+	    id: string;
+	    status: string;
+	    points: number;
+	    maxPts: number;
+	    value: string;
+	    fixHint: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SecurityCheckItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.status = source["status"];
+	        this.points = source["points"];
+	        this.maxPts = source["maxPts"];
+	        this.value = source["value"];
+	        this.fixHint = source["fixHint"];
+	    }
+	}
+	export class SecurityAuditReport {
+	    serverId: string;
+	    score: number;
+	    grade: string;
+	    checks: SecurityCheckItem[];
+	    certs: SSLCertInfo[];
+	    generatedAt: string;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SecurityAuditReport(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.serverId = source["serverId"];
+	        this.score = source["score"];
+	        this.grade = source["grade"];
+	        this.checks = this.convertValues(source["checks"], SecurityCheckItem);
+	        this.certs = this.convertValues(source["certs"], SSLCertInfo);
+	        this.generatedAt = source["generatedAt"];
+	        this.error = source["error"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class ServerConfig {
 	    id: string;
 	    name: string;
@@ -776,6 +941,7 @@ export namespace main {
 	        this.exactCommand = source["exactCommand"];
 	    }
 	}
+	
 	export class TriggeredAlert {
 	    id: string;
 	    serverId: string;

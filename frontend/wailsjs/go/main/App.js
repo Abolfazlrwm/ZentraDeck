@@ -22,6 +22,10 @@ export function ControlService(arg1, arg2, arg3) {
   return window['go']['main']['App']['ControlService'](arg1, arg2, arg3);
 }
 
+export function DeleteCronJob(arg1, arg2) {
+  return window['go']['main']['App']['DeleteCronJob'](arg1, arg2);
+}
+
 export function DeleteServer(arg1) {
   return window['go']['main']['App']['DeleteServer'](arg1);
 }
@@ -44,6 +48,14 @@ export function GetDockerLogs(arg1, arg2) {
 
 export function GetReportExportInfo() {
   return window['go']['main']['App']['GetReportExportInfo']();
+}
+
+export function GetScheduledTasks(arg1) {
+  return window['go']['main']['App']['GetScheduledTasks'](arg1);
+}
+
+export function GetSecurityAudit(arg1) {
+  return window['go']['main']['App']['GetSecurityAudit'](arg1);
 }
 
 export function GetServerHistory(arg1, arg2) {
@@ -146,6 +158,10 @@ export function SFTPWriteFile(arg1, arg2, arg3) {
   return window['go']['main']['App']['SFTPWriteFile'](arg1, arg2, arg3);
 }
 
+export function SaveCronJob(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['SaveCronJob'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function SaveHistoryReport(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['SaveHistoryReport'](arg1, arg2, arg3, arg4);
 }
@@ -184,6 +200,10 @@ export function StartQuickCommand(arg1, arg2, arg3) {
 
 export function TestConnection(arg1) {
   return window['go']['main']['App']['TestConnection'](arg1);
+}
+
+export function ToggleCronJob(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ToggleCronJob'](arg1, arg2, arg3);
 }
 
 export function ToggleDemoOutage(arg1) {

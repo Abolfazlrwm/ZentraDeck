@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -106,6 +106,8 @@ export default function HistoryPanel({
   onToast,
 }: HistoryPanelProps) {
   const th = getHistoryStrings(language);
+  const onToastRef = useRef(onToast);
+  onToastRef.current = onToast;
   const [range, setRange] = useState<RangeKey>('24h');
   const [chartKind, setChartKind] = useState<ChartKind>('cpu');
   const [incFilter, setIncFilter] = useState<IncidentFilter>('all');
@@ -123,11 +125,11 @@ export default function HistoryPanel({
       const data = await GetServerHistory(serverId, targetRange);
       setReport(data);
     } catch (err) {
-      onToast('error', String(err));
+      onToastRef.current('error', String(err));
     } finally {
       setLoading(false);
     }
-  }, [serverId, onToast]);
+  }, [serverId]);
 
   useEffect(() => {
     loadHistory(range);

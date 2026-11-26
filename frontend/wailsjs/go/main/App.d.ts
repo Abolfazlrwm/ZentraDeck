@@ -12,6 +12,8 @@ export function ControlDocker(arg1:string,arg2:string,arg3:string):Promise<main.
 
 export function ControlService(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
+export function DeleteCronJob(arg1:string,arg2:number):Promise<main.ActionResult>;
+
 export function DeleteServer(arg1:string):Promise<void>;
 
 export function EnableSysstat(arg1:string):Promise<main.ActionResult>;
@@ -23,6 +25,10 @@ export function GetDemoServers():Promise<Array<main.ServerConfig>>;
 export function GetDockerLogs(arg1:string,arg2:string):Promise<string>;
 
 export function GetReportExportInfo():Promise<main.ReportExportInfo>;
+
+export function GetScheduledTasks(arg1:string):Promise<main.ScheduledTasksReport>;
+
+export function GetSecurityAudit(arg1:string):Promise<main.SecurityAuditReport>;
 
 export function GetServerHistory(arg1:string,arg2:string):Promise<main.ServerHistoryReport>;
 
@@ -74,6 +80,8 @@ export function SFTPUploadFile(arg1:string,arg2:string):Promise<main.ActionResul
 
 export function SFTPWriteFile(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
+export function SaveCronJob(arg1:string,arg2:number,arg3:string,arg4:string,arg5:string):Promise<main.ActionResult>;
+
 export function SaveHistoryReport(arg1:string,arg2:string,arg3:string,arg4:string):Promise<main.SaveReportResult>;
 
 export function SaveServer(arg1:main.ServerConfig):Promise<main.ServerConfig>;
@@ -93,6 +101,8 @@ export function StartPTY(arg1:string,arg2:string,arg3:number,arg4:number):Promis
 export function StartQuickCommand(arg1:string,arg2:string,arg3:string):Promise<main.ActionResult>;
 
 export function TestConnection(arg1:main.ServerConfig):Promise<main.ActionResult>;
+
+export function ToggleCronJob(arg1:string,arg2:number,arg3:boolean):Promise<main.ActionResult>;
 
 export function ToggleDemoOutage(arg1:string):Promise<boolean>;
 
