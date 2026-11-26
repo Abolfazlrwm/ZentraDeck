@@ -564,6 +564,39 @@ func extractJournalIsoTime(line string) (string, string) {
 	return "", line
 }
 
+var lastWeekdayAbbr = map[string]bool{
+	"Mon": true, "Tue": true, "Wed": true, "Thu": true,
+	"Fri": true, "Sat": true, "Sun": true,
+}
+
+var lastMonthAbbr = map[string]bool{
+	"Jan": true, "Feb": true, "Mar": true, "Apr": true, "May": true,
+	"Jun": true, "Jul": true, "Aug": true, "Sep": true, "Oct": true,
+	"Nov": true, "Dec": true,
+}
+
+// parseLastRebootTime extracts the boot timestamp from a `last -x -F` reboot
+// line such as:
+//
+//	reboot   system boot  6.8.0-45-generic Tue Nov 24 03:12:04 2026 - Wed Nov 24 03:34:56 2026  (0+00:22)
+//
+// The boot time is the first "<weekday> <month> <day> <hh:mm:ss> <year>" run
+// anywhere in the line (the end-of-session date has the same shape and must
+// not be picked instead).
+func parseLastRebootTime(line string) (time.Time, bool) {
+	fields := strings.Fields(line)
+	for i := 0; i+5 <= len(fields); i++ {
+		if !lastWeekdayAbbr[fields[i]] || !lastMonthAbbr[fields[i+1]] {
+			continue
+		}
+		dateStr := strings.Join(fields[i:i+5], " ")
+		if t, err := time.Parse("Mon Jan 2 15:04:05 2006", dateStr); err == nil {
+			return t, true
+		}
+	}
+	return time.Time{}, false
+}
+
 func parseIncidentsSections(sections map[string]string, cutoff time.Time) []HistoryIncident {
 	incidents := make([]HistoryIncident, 0, 32)
 	seq := 0
@@ -579,19 +612,11 @@ func parseIncidentsSections(sections map[string]string, cutoff time.Time) []Hist
 			continue
 		}
 		ts := ""
-		if idx := strings.Index(line, "  "); idx > 0 {
-			rest := strings.TrimSpace(line[idx:])
-			parts := strings.Fields(rest)
-			if len(parts) >= 6 {
-				// e.g. 6.8.0-45-generic Tue Nov 24 03:12:04 2026 - ...
-				dateStr := strings.Join(parts[1:6], " ")
-				if t, err := time.Parse("Mon Jan 2 15:04:05 2006", dateStr); err == nil {
-					if t.Before(cutoff) {
-						continue
-					}
-					ts = t.Format("2006-01-02 15:04")
-				}
+		if t, ok := parseLastRebootTime(line); ok {
+			if t.Before(cutoff) {
+				continue
 			}
+			ts = t.Format("2006-01-02 15:04")
 		}
 		if ts == "" {
 			ts = time.Now().Format("2006-01-02 15:04")
