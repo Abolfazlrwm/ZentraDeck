@@ -1057,7 +1057,7 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base font-bold tracking-tight text-white">ZentraDeck</span>
-                <button type="button" onClick={() => BrowserOpenURL('https://github.com/CyberRhythm/ZentraDeck/releases')} title="View releases on GitHub" className="cursor-pointer transition hover:border-cyan-400/50 hover:text-cyan-300 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300">v0.4.0</button>
+                <button type="button" onClick={() => BrowserOpenURL('https://github.com/CyberRhythm/ZentraDeck/releases')} title="View releases on GitHub" className="cursor-pointer transition hover:border-cyan-400/50 hover:text-cyan-300 rounded-md border border-cyan-400/25 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300">v0.4.1</button>
               </div>
               <p className="text-[11px] text-slate-400">{t.openSourceFree}</p>
             </div>
@@ -3630,7 +3630,7 @@ export default function App() {
         open={settingsModalOpen}
         initialTab={settingsTab}
         settings={settings}
-        appVersion="v0.4.0-dev"
+        appVersion="v0.4.1"
         simpleLabel={t.simpleMode}
         proLabel={t.proMode}
         onClose={() => setSettingsModalOpen(false)}

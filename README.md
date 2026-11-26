@@ -49,7 +49,7 @@ Managing a fleet of Linux VPS boxes shouldn't force you to pick between two extr
 
 Every tool has trade-offs. ZentraDeck is built for **fast, zero-agent desktop operations, live triage, multi-server command execution, security auditing, interactive SSH/PTY, and safe SFTP editing** — not as a replacement for multi-month Prometheus/Grafana time-series warehouses or cloud team sync.
 
-| Capability | **ZentraDeck v0.4.0** | Electron SSH Clients *(Termius, Tabby)* | Agent Dashboards *(Netdata, Grafana)* | Web Panels *(Cockpit)* |
+| Capability | **ZentraDeck v0.4.1** | Electron SSH Clients *(Termius, Tabby)* | Agent Dashboards *(Netdata, Grafana)* | Web Panels *(Cockpit)* |
 | :--- | :---: | :---: | :---: | :---: |
 | **Zero Server Agent / No Extra Ports** | ✅ Pure SSH & SFTP | ✅ Pure SSH | ❌ Agent required | ❌ Daemon + Web Port |
 | **Desktop Footprint** | **<15 MB Go core** + lean OS WebView | ~300–600 MB (bundled Chromium) | Browser + Server RAM | Browser + Server RAM |

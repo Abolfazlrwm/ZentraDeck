@@ -683,7 +683,7 @@ export default function SecurityCronPanel({ serverId, language, onToast }: Secur
                         type="button"
                         onClick={() => {
                           setCmdInput(tpl.cmd);
-                          if (!commentInput.trim()) setCommentInput(tpl.label);
+                          setCommentInput(tpl.label);
                         }}
                         className="rounded-lg border border-indigo-400/25 bg-indigo-500/10 px-2.5 py-1 text-[11px] font-medium text-indigo-200 transition hover:bg-indigo-500/25 hover:text-white"
                       >
