@@ -238,7 +238,7 @@ export default function SettingsModal({
 
         {/* Body */}
         <div className="flex min-h-[410px] flex-1 flex-col overflow-hidden sm:flex-row">
-          <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-white/10 bg-slate-950/40 p-2.5 sm:w-48 sm:flex-col sm:border-b-0 sm:border-e">
+          <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-white/10 bg-slate-950/40 p-2.5 sm:w-56 sm:flex-col sm:border-b-0 sm:border-e">
             {tabs.map((item) => (
               <button
                 key={item.id}

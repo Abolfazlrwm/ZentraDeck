@@ -28,6 +28,7 @@ import {
   describeCronSchedule,
   describeSystemdTimer,
   getSecurityCronStrings,
+  getWeekDays,
   type SecurityCronStrings,
 } from './securityCronI18n';
 
@@ -82,7 +83,6 @@ function buildCronFromVisual(
 
 export default function SecurityCronPanel({ serverId, language, onToast }: SecurityCronPanelProps) {
   const ts = getSecurityCronStrings(language);
-  const isFa = language === 'fa';
   const onToastRef = useRef(onToast);
   onToastRef.current = onToast;
 
@@ -257,25 +257,7 @@ export default function SecurityCronPanel({ serverId, language, onToast }: Secur
         ? 'text-amber-300 border-amber-400/35 bg-amber-500/15'
         : 'text-rose-300 border-rose-400/35 bg-rose-500/15';
 
-  const weekDays = isFa
-    ? [
-        { val: 6, label: 'شنبه' },
-        { val: 0, label: 'یکشنبه' },
-        { val: 1, label: 'دوشنبه' },
-        { val: 2, label: 'سه‌شنبه' },
-        { val: 3, label: 'چهارشنبه' },
-        { val: 4, label: 'پنج‌شنبه' },
-        { val: 5, label: 'جمعه' },
-      ]
-    : [
-        { val: 0, label: 'Sunday' },
-        { val: 1, label: 'Monday' },
-        { val: 2, label: 'Tuesday' },
-        { val: 3, label: 'Wednesday' },
-        { val: 4, label: 'Thursday' },
-        { val: 5, label: 'Friday' },
-        { val: 6, label: 'Saturday' },
-      ];
+  const weekDays = getWeekDays(language);
 
   return (
     <div className="space-y-5">

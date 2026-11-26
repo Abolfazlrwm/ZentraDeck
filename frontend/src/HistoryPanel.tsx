@@ -208,27 +208,27 @@ export default function HistoryPanel({
       lines.push(h3(`📊 ${th.chartsTitle} (${s.sampleCount} samples · ${s.dataSpan})`));
       if (isMd) {
         lines.push(
-          `| Metric | Peak | Average | Peak Time |`,
+          `| ${th.tblMetric} | ${th.tblPeak} | ${th.tblAvg} | ${th.tblPeakTime} |`,
           `| :--- | :---: | :---: | :--- |`,
-          `| 🔥 CPU Total | ${s.peakCpu.value}% | ${s.avgCpu}% | ${s.peakCpu.timestamp} |`,
-          `| 🧠 RAM | ${s.peakRam.value}% | ${s.avgRam}% | ${s.peakRam.timestamp} |`,
-          `| 💿 Swap | ${s.peakSwap?.value ?? 0}% | - | ${s.peakSwap?.timestamp || '-'} |`,
-          `| ⏳ Disk I/O Wait | ${s.peakIOWait.value}% | ${s.avgIOWait ?? 0}% | ${s.peakIOWait.timestamp} |`,
-          `| ☁️ Host CPU Steal | ${s.peakSteal.value}% | ${s.avgSteal ?? 0}% | ${s.peakSteal.timestamp} |`,
-          `| ⚙️ Load Average (1m) | ${s.peakLoad.value} | ${s.avgLoad ?? 0} | ${s.peakLoad.timestamp} |`,
-          `| ⬇️ Network RX | ${formatNetRate(s.peakNetRx.value)} | - | ${s.peakNetRx.timestamp} |`,
-          `| ⬆️ Network TX | ${formatNetRate(s.peakNetTx.value)} | - | ${s.peakNetTx.timestamp} |`,
+          `| 🔥 ${th.rowCpuTotal} | ${s.peakCpu.value}% | ${s.avgCpu}% | ${s.peakCpu.timestamp} |`,
+          `| 🧠 ${th.ramUsed} | ${s.peakRam.value}% | ${s.avgRam}% | ${s.peakRam.timestamp} |`,
+          `| 💿 ${th.swapUsed} | ${s.peakSwap?.value ?? 0}% | - | ${s.peakSwap?.timestamp || '-'} |`,
+          `| ⏳ ${th.cpuIOWait} | ${s.peakIOWait.value}% | ${s.avgIOWait ?? 0}% | ${s.peakIOWait.timestamp} |`,
+          `| ☁️ ${th.cpuSteal} | ${s.peakSteal.value}% | ${s.avgSteal ?? 0}% | ${s.peakSteal.timestamp} |`,
+          `| ⚙️ ${th.load1m} | ${s.peakLoad.value} | ${s.avgLoad ?? 0} | ${s.peakLoad.timestamp} |`,
+          `| ⬇️ ${th.netRx} | ${formatNetRate(s.peakNetRx.value)} | - | ${s.peakNetRx.timestamp} |`,
+          `| ⬆️ ${th.netTx} | ${formatNetRate(s.peakNetTx.value)} | - | ${s.peakNetTx.timestamp} |`,
           ''
         );
       } else {
         lines.push(
-          `• CPU Total: Peak ${s.peakCpu.value}% | Avg ${s.avgCpu}% (${s.peakCpu.timestamp})`,
-          `• RAM: Peak ${s.peakRam.value}% | Avg ${s.avgRam}% (${s.peakRam.timestamp})`,
-          `• Swap: Peak ${s.peakSwap?.value ?? 0}% (${s.peakSwap?.timestamp || '-'})`,
-          `• Disk I/O Wait: Peak ${s.peakIOWait.value}% | Avg ${s.avgIOWait ?? 0}% (${s.peakIOWait.timestamp})`,
-          `• Host CPU Steal: Peak ${s.peakSteal.value}% | Avg ${s.avgSteal ?? 0}% (${s.peakSteal.timestamp})`,
-          `• Load Average: Peak ${s.peakLoad.value} | Avg ${s.avgLoad ?? 0} (${s.peakLoad.timestamp})`,
-          `• Network RX/TX Peak: ↓${formatNetRate(s.peakNetRx.value)} / ↑${formatNetRate(s.peakNetTx.value)}`,
+          `• ${th.rowCpuTotal}: ${th.tblPeak} ${s.peakCpu.value}% | ${th.avgLabel} ${s.avgCpu}% (${s.peakCpu.timestamp})`,
+          `• ${th.ramUsed}: ${th.tblPeak} ${s.peakRam.value}% | ${th.avgLabel} ${s.avgRam}% (${s.peakRam.timestamp})`,
+          `• ${th.swapUsed}: ${th.tblPeak} ${s.peakSwap?.value ?? 0}% (${s.peakSwap?.timestamp || '-'})`,
+          `• ${th.cpuIOWait}: ${th.tblPeak} ${s.peakIOWait.value}% | ${th.avgLabel} ${s.avgIOWait ?? 0}% (${s.peakIOWait.timestamp})`,
+          `• ${th.cpuSteal}: ${th.tblPeak} ${s.peakSteal.value}% | ${th.avgLabel} ${s.avgSteal ?? 0}% (${s.peakSteal.timestamp})`,
+          `• ${th.load1m}: ${th.tblPeak} ${s.peakLoad.value} | ${th.avgLabel} ${s.avgLoad ?? 0} (${s.peakLoad.timestamp})`,
+          `• ${th.netRx} / ${th.netTx}: ↓${formatNetRate(s.peakNetRx.value)} / ↑${formatNetRate(s.peakNetTx.value)}`,
           ''
         );
       }

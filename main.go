@@ -34,7 +34,8 @@ func main() {
 			app,
 		},
 		Windows: &windows.Options{
-			Theme: windows.Dark,
+			Theme:                windows.Dark,
+			WebviewGpuIsDisabled: true,
 		},
 		Mac: &mac.Options{
 			Appearance: mac.NSAppearanceNameDarkAqua,

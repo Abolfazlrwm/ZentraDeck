@@ -76,6 +76,28 @@ export namespace main {
 	        this.reportExportFormat = source["reportExportFormat"];
 	    }
 	}
+	export class BroadcastResult {
+	    serverId: string;
+	    serverName: string;
+	    success: boolean;
+	    output: string;
+	    error: string;
+	    durationMs: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new BroadcastResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.serverId = source["serverId"];
+	        this.serverName = source["serverName"];
+	        this.success = source["success"];
+	        this.output = source["output"];
+	        this.error = source["error"];
+	        this.durationMs = source["durationMs"];
+	    }
+	}
 	export class CommandOutput {
 	    success: boolean;
 	    output: string;
@@ -90,6 +112,26 @@ export namespace main {
 	        this.success = source["success"];
 	        this.output = source["output"];
 	        this.durationMs = source["durationMs"];
+	    }
+	}
+	export class CommandSnippet {
+	    id: string;
+	    title: string;
+	    command: string;
+	    category: string;
+	    description: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CommandSnippet(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.title = source["title"];
+	        this.command = source["command"];
+	        this.category = source["category"];
+	        this.description = source["description"];
 	    }
 	}
 	export class CronJobItem {
