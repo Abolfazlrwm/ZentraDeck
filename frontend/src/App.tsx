@@ -768,7 +768,8 @@ export default function App() {
   // Per-server remembered tab + auto-dispose disconnected PTYs on server switch
   useEffect(() => {
     const prevId = prevSelectedIdRef.current;
-    if (prevId && prevId !== selectedId) {
+    const serverChanged = prevId !== selectedId;
+    if (prevId && serverChanged) {
       serverTabMapRef.current[prevId] = activeTabRef.current;
       setMountedPtyIds((prev) =>
         prev.filter(
@@ -781,7 +782,13 @@ export default function App() {
     }
     prevSelectedIdRef.current = selectedId;
 
-    if (selectedId) {
+    // Only restore the remembered tab when the server actually changed.
+    // serverTabMapRef is only written when switching AWAY from a server, so
+    // re-running this restore on the Simple/Pro toggle would clobber the
+    // current tab with a stale value - or 'overview' for a server that was
+    // never switched away from. (The Pro -> Simple fallback for pro-only
+    // tabs lives in its own effect below.)
+    if (selectedId && serverChanged) {
       const remembered = serverTabMapRef.current[selectedId] || 'overview';
       const safeTab =
         !isPro && (remembered === 'network' || remembered === 'files' || remembered === 'terminal')
