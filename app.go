@@ -1685,6 +1685,13 @@ func (a *App) CancelQuickCommand(serverID string) ActionResult {
 	if ok {
 		delete(a.activeTerm, serverID)
 	}
+	// Copy run.sess while holding the lock: StartQuickCommand's goroutine
+	// writes run.sess under termMu, so reading it after Unlock is a data
+	// race (the race detector flags it and the value may be stale).
+	var sess *ssh.Session
+	if ok && run != nil {
+		sess = run.sess
+	}
 	a.termMu.Unlock()
 
 	if !ok || run == nil {
@@ -1693,9 +1700,9 @@ func (a *App) CancelQuickCommand(serverID string) ActionResult {
 	if run.cancel != nil {
 		run.cancel()
 	}
-	if run.sess != nil {
-		_ = run.sess.Signal(ssh.SIGTERM)
-		_ = run.sess.Close()
+	if sess != nil {
+		_ = sess.Signal(ssh.SIGTERM)
+		_ = sess.Close()
 	}
 	return ActionResult{Success: true, Message: "Command cancelled"}
 }
