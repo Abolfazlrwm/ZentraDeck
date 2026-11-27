@@ -174,9 +174,11 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
   const [confirmCloseOpen, setConfirmCloseOpen] = useState<boolean>(false);
   const [cursorPos, setCursorPos] = useState<{ ln: number; col: number }>({ ln: 1, col: 1 });
 
-  // Undo / Redo stack
-  const [undoStack, setUndoStack] = useState<string[]>([]);
-  const [undoIdx, setUndoIdx] = useState<number>(0);
+  // Undo / Redo stack (stack and index live in one state so they can never desync)
+  const [undoState, setUndoState] = useState<{ stack: string[]; idx: number }>({
+    stack: [],
+    idx: 0,
+  });
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const findInputRef = useRef<HTMLInputElement | null>(null);
@@ -293,8 +295,7 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
   const initEditorSession = useCallback((filePath: string, content: string) => {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     setEditorFile({ path: filePath, content, original: content });
-    setUndoStack([content]);
-    setUndoIdx(0);
+    setUndoState({ stack: [content], idx: 0 });
     setConfirmCloseOpen(false);
     setFindOpen(false);
     setFindQuery('');
@@ -309,14 +310,22 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
 
   const commitSnapshotNow = useCallback((nextContent: string) => {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-    setUndoStack((prev) => {
-      const sliced = prev.slice(0, undoIdx + 1);
-      if (sliced[sliced.length - 1] === nextContent) return sliced;
+    // Stack and index move in a single functional update. The previous code
+    // bumped undoIdx unconditionally while the stack updater could bail out
+    // (snapshot identical to the top of the stack), which desynced undoIdx
+    // past undoStack.length - handleUndo then read undoStack[out of range]
+    // as undefined and crashed the editor on editorFile.content.split.
+    setUndoState(({ stack, idx }) => {
+      const sliced = stack.slice(0, idx + 1);
+      if (sliced[sliced.length - 1] === nextContent) {
+        return { stack: sliced, idx: sliced.length - 1 };
+      }
       const merged = [...sliced, nextContent];
-      return merged.length > MAX_UNDO_STEPS ? merged.slice(merged.length - MAX_UNDO_STEPS) : merged;
+      const trimmed =
+        merged.length > MAX_UNDO_STEPS ? merged.slice(merged.length - MAX_UNDO_STEPS) : merged;
+      return { stack: trimmed, idx: trimmed.length - 1 };
     });
-    setUndoIdx((prev) => Math.min(prev + 1, MAX_UNDO_STEPS - 1));
-  }, [undoIdx]);
+  }, []);
 
   const updateEditorContent = useCallback(
     (nextContent: string, immediateHistory = false) => {
@@ -333,26 +342,26 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
     [commitSnapshotNow]
   );
 
-  const canUndo = undoIdx > 0;
-  const canRedo = undoIdx < undoStack.length - 1;
+  const canUndo = undoState.idx > 0;
+  const canRedo = undoState.idx < undoState.stack.length - 1;
 
   const handleUndo = useCallback(() => {
     if (!canUndo) return;
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-    const nextIdx = undoIdx - 1;
-    const val = undoStack[nextIdx];
-    setUndoIdx(nextIdx);
+    const nextIdx = undoState.idx - 1;
+    const val = undoState.stack[nextIdx];
+    setUndoState((prev) => ({ ...prev, idx: nextIdx }));
     setEditorFile((prev) => (prev ? { ...prev, content: val } : null));
-  }, [canUndo, undoIdx, undoStack]);
+  }, [canUndo, undoState]);
 
   const handleRedo = useCallback(() => {
     if (!canRedo) return;
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-    const nextIdx = undoIdx + 1;
-    const val = undoStack[nextIdx];
-    setUndoIdx(nextIdx);
+    const nextIdx = undoState.idx + 1;
+    const val = undoState.stack[nextIdx];
+    setUndoState((prev) => ({ ...prev, idx: nextIdx }));
     setEditorFile((prev) => (prev ? { ...prev, content: val } : null));
-  }, [canRedo, undoIdx, undoStack]);
+  }, [canRedo, undoState]);
 
   const handleOpenEditor = async (filePath: string) => {
     setBusy(true);
