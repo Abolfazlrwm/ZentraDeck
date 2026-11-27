@@ -373,7 +373,7 @@ func (a *App) trayMonitorLoop() {
 				if m.Online {
 					onlineCount++
 				}
-				alerts := a.EvaluateServerAlerts(srv.ID, srv.Name, false, m)
+				alerts := a.EvaluateServerAlerts(srv.ID, srv.Name, srv.IsDemo, m)
 				if a.ctx != nil {
 					for _, al := range alerts {
 						wailsruntime.EventsEmit(a.ctx, "zentradeck:alert", al)
