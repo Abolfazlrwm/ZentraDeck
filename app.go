@@ -1030,7 +1030,11 @@ func (a *App) runSSHCommand(cfg ServerConfig, cmd string) (string, error) {
 		return "", err
 	}
 	out, err := execOnce(client, cmd)
-	if err != nil {
+	if err != nil && !isExitError(err) {
+		// Only transport/session failures justify dropping the shared client
+		// and retrying. A non-zero command exit status is a normal result:
+		// the connection is still healthy, and dropping it would kill any
+		// PTY/SFTP sessions riding the same client and re-run the command.
 		a.dropClientIfMatch(cfg.ID, client)
 		client, err = a.getClient(cfg)
 		if err != nil {
@@ -1038,7 +1042,16 @@ func (a *App) runSSHCommand(cfg ServerConfig, cmd string) (string, error) {
 		}
 		return execOnce(client, cmd)
 	}
-	return out, nil
+	return out, err
+}
+
+// isExitError reports whether err is a normal non-zero command exit status
+// rather than a connection-level failure. CombinedOutput returns
+// *ssh.ExitError when the command ran to completion but exited non-zero;
+// that outcome must be propagated to the caller as-is.
+func isExitError(err error) bool {
+	var ee *ssh.ExitError
+	return errors.As(err, &ee)
 }
 
 func execOnce(client *ssh.Client, cmd string) (string, error) {
