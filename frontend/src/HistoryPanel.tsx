@@ -536,7 +536,7 @@ export default function HistoryPanel({
                 L {summary.peakLoad.value}
               </span>
               <span dir="ltr" className="font-mono text-[11px] text-slate-300">
-                ↓{Math.round(summary.peakNetRx.value)} ↑{Math.round(summary.peakNetTx.value)} KB/s
+                ↓{formatNetRate(summary.peakNetRx.value)} ↑{formatNetRate(summary.peakNetTx.value)}
               </span>
             </div>
             <div dir="ltr" className="mt-1 truncate font-mono text-[10px] text-slate-500">
