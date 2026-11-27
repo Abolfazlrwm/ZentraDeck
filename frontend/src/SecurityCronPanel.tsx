@@ -162,6 +162,73 @@ export default function SecurityCronPanel({ serverId, language, onToast }: Secur
     setSchedInput(buildCronFromVisual(nextMode, nextEM, nextEH, nextH, nextM, nextD));
   };
 
+  // Parse an existing cron expression back into the visual builder state so
+  // editing a job never silently replaces its schedule with stale defaults.
+  // Returns false when the expression cannot be represented visually (the
+  // caller should then fall back to the raw-expression input).
+  const syncBuilderFromSchedule = (schedule: string): boolean => {
+    const s = schedule.trim();
+    if (s === '@reboot') {
+      setBuilderMode('reboot');
+      return true;
+    }
+    const f = s.split(/\s+/);
+    if (f.length !== 5 || f[2] !== '*' || f[3] !== '*') {
+      return false;
+    }
+    const [min, hour, , , dow] = f;
+
+    // Every N minutes: */N * * * *
+    const everyMinMatch = /^\*\/(\d+)$/.exec(min);
+    if (everyMinMatch && hour === '*' && dow === '*') {
+      const v = Number(everyMinMatch[1]);
+      if (v >= 1 && v <= 59) {
+        setBuilderMode('minutes');
+        setEveryMin(v);
+        return true;
+      }
+      return false;
+    }
+
+    // Every N hours: 0 */N * * *
+    const everyHourMatch = /^\*\/(\d+)$/.exec(hour);
+    if (everyHourMatch && min === '0' && dow === '*') {
+      const v = Number(everyHourMatch[1]);
+      if (v >= 1 && v <= 23) {
+        setBuilderMode('hours');
+        setEveryHour(v);
+        return true;
+      }
+      return false;
+    }
+
+    // Daily (M H * * *) or weekly (M H * * D) at a fixed time
+    if (/^\d+$/.test(min) && /^\d+$/.test(hour)) {
+      const m = Number(min);
+      const h = Number(hour);
+      if (m < 0 || m > 59 || h < 0 || h > 23) {
+        return false;
+      }
+      if (dow === '*') {
+        setBuilderMode('daily');
+        setPickHour(h);
+        setPickMin(m);
+        return true;
+      }
+      if (/^\d+$/.test(dow)) {
+        const d = Number(dow);
+        if (d >= 0 && d <= 6) {
+          setBuilderMode('weekly');
+          setPickHour(h);
+          setPickMin(m);
+          setPickDow(d);
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const handleCopyFix = async (id: string, cmd: string) => {
     try {
       await navigator.clipboard.writeText(cmd);
@@ -227,7 +294,10 @@ export default function SecurityCronPanel({ serverId, language, onToast }: Secur
     setSchedInput(job.schedule);
     setCmdInput(job.command);
     setCommentInput(job.comment || '');
-    setShowRawInput(false);
+    // Hydrate the visual builder from the job's real schedule so clicking any
+    // visual control continues from it instead of overwriting it with stale
+    // defaults. Non-representable expressions fall back to the raw input.
+    setShowRawInput(!syncBuilderFromSchedule(job.schedule));
     setFormOpen(true);
   };
 
