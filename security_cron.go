@@ -584,8 +584,14 @@ func (a *App) readRawUserCrontab(cfg ServerConfig) ([]string, error) {
 		return cp, nil
 	}
 	out, err := a.runSSHCommand(cfg, "crontab -l 2>/dev/null || true")
-	if err != nil && strings.TrimSpace(out) == "" {
-		return []string{}, nil
+	if err != nil {
+		// The '|| true' suffix guarantees the shell itself exits 0, so err
+		// can only be a transport/session failure. Reporting that as an
+		// empty crontab would let SaveCronJob's add path replace the whole
+		// remote crontab with just the new job, wiping every existing one.
+		// (A genuinely empty crontab arrives as err == nil with empty
+		// output and is handled below.)
+		return nil, err
 	}
 	raw := strings.ReplaceAll(out, "\r\n", "\n")
 	if strings.TrimSpace(raw) == "" {
