@@ -189,14 +189,22 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
   const [replaceQuery, setReplaceQuery] = useState<string>('');
   const [activeMatchIdx, setActiveMatchIdx] = useState<number>(0);
 
+  // Monotonic request id: a slower earlier listing (e.g. /var/log on a cold
+  // SSH connection) can resolve after a faster later one (~ on the warm
+  // connection), or after switching servers; only the newest response may
+  // touch the listing state or the per-server dir cache.
+  const loadDirSeqRef = useRef(0);
+
   const loadDir = useCallback(
     async (targetPath: string) => {
       if (!serverId) return;
+      const seq = ++loadDirSeqRef.current;
       setLoading(true);
       setErrorMsg('');
       setConfirmDeletePath(null);
       try {
         const res = await SFTPListDir(serverId, targetPath);
+        if (seq !== loadDirSeqRef.current) return;
         if (res && res.success) {
           const nextPath = res.path || '/';
           const nextParent = res.parent || '/';
@@ -215,6 +223,7 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
           });
         } else if (res?.error === 'NOT_A_DIRECTORY') {
           SFTPReadFile(serverId, targetPath).then((fres) => {
+            if (seq !== loadDirSeqRef.current) return;
             if (fres && fres.success) {
               initEditorSession(fres.path, fres.content);
             } else {
@@ -225,9 +234,12 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
           setErrorMsg(res?.error || 'Failed to load directory');
         }
       } catch (err) {
+        if (seq !== loadDirSeqRef.current) return;
         setErrorMsg(String(err));
       } finally {
-        setLoading(false);
+        if (seq === loadDirSeqRef.current) {
+          setLoading(false);
+        }
       }
     },
     [serverId]
@@ -235,6 +247,10 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
 
   // Instant per-server restore from lightweight cache (0ms switch, 1 DOM instance)
   useEffect(() => {
+    // Invalidate any listing still in flight for the previous server (it may
+    // not trigger a new loadDir when the cache hits, so its response would
+    // otherwise still look 'current' to the seq guard above).
+    loadDirSeqRef.current++;
     setEditorFile(null);
     setEditorFullscreen(false);
     setConfirmCloseOpen(false);
