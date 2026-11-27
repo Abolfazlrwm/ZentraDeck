@@ -222,14 +222,21 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
             showHidden: prev?.showHidden ?? true,
           });
         } else if (res?.error === 'NOT_A_DIRECTORY') {
-          SFTPReadFile(serverId, targetPath).then((fres) => {
-            if (seq !== loadDirSeqRef.current) return;
-            if (fres && fres.success) {
-              initEditorSession(fres.path, fres.content);
-            } else {
-              onToast('error', fres?.error || 'Cannot open file');
-            }
-          });
+          SFTPReadFile(serverId, targetPath)
+            .then((fres) => {
+              if (seq !== loadDirSeqRef.current) return;
+              if (fres && fres.success) {
+                initEditorSession(fres.path, fres.content);
+              } else {
+                onToast('error', fres?.error || 'Cannot open file');
+              }
+            })
+            .catch((readErr: unknown) => {
+              // Wails rejects the promise when the Go call returns an error
+              // (e.g. permission denied); without this the click on a
+              // file/symlink silently does nothing.
+              onToast('error', String(readErr));
+            });
         } else {
           setErrorMsg(res?.error || 'Failed to load directory');
         }
