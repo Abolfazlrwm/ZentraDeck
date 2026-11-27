@@ -212,7 +212,7 @@ export default function SettingsModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md"
     >
       <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-900/95 shadow-2xl">
         {/* Modal Header */}
