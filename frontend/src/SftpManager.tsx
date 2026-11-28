@@ -232,6 +232,7 @@ export default function SftpManager({ serverId, serverName, language, autoBackup
               }
             })
             .catch((readErr: unknown) => {
+              if (seq !== loadDirSeqRef.current) return;
               // Wails rejects the promise when the Go call returns an error
               // (e.g. permission denied); without this the click on a
               // file/symlink silently does nothing.

@@ -156,6 +156,7 @@ export default function SecurityCronPanel({ serverId, language, onToast }: Secur
   }, [serverId]);
 
   useEffect(() => {
+    tasksSeqRef.current++;
     setAudit(null);
     setTasks(null);
     // Reset the loading flags too: an in-flight request for the previous
